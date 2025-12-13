@@ -28,7 +28,7 @@ const Login = () => {
     const [bgAvailable, setBgAvailable] = useState<boolean>(false);
 
     // Preload and detect background availability to avoid broken CSS url
-    // If not found, we keep the clean white/gradient backdrop
+    
     useEffect(() => {
         let mounted = true;
         const img = new Image();
