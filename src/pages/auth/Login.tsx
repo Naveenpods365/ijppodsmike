@@ -112,7 +112,6 @@ const Login = () => {
                     </div>
                 </div>
 
-                {/* Right form card */}
                 <div className="lg:col-span-6 flex items-center justify-center px-4 sm:px-6 md:px-8">
                     <Card className="w-full max-w-[460px] border-0 backdrop-blur supports-[backdrop-filter]:bg-white/70 shadow-[0_10px_30px_rgba(17,24,39,0.08)]">
                         <CardHeader className="pb-2">
