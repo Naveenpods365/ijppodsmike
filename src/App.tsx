@@ -8,6 +8,9 @@ import Scheduler from "./pages/Scheduler";
 import Coupons from "./pages/Coupons";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/auth/Login";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -18,19 +21,31 @@ const App = () => (
             <Sonner />
             <div className="min-h-screen flex flex-col">
                 <BrowserRouter>
-                    <div className="flex-1">
-                        <Routes>
-                            <Route path="/" element={<Index />} />
-                            <Route path="/scheduler" element={<Scheduler />} />
-                            <Route path="/coupons" element={<Coupons />} />
-                            <Route path="/settings" element={<Settings />} />
-                            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                            <Route path="*" element={<NotFound />} />
-                        </Routes>
-                    </div>
+                    <AuthProvider>
+                        <div className="flex-1">
+                            <Routes>
+                                <Route path="/login" element={<Login />} />
+                                <Route element={<ProtectedRoute />}>
+                                    <Route path="/" element={<Index />} />
+                                    <Route
+                                        path="/scheduler"
+                                        element={<Scheduler />}
+                                    />
+                                    <Route
+                                        path="/coupons"
+                                        element={<Coupons />}
+                                    />
+                                    <Route
+                                        path="/settings"
+                                        element={<Settings />}
+                                    />
+                                </Route>
+                                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                                <Route path="*" element={<NotFound />} />
+                            </Routes>
+                        </div>
+                    </AuthProvider>
                 </BrowserRouter>
-              
-              
             </div>
         </TooltipProvider>
     </QueryClientProvider>
