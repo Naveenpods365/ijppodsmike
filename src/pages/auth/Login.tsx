@@ -27,8 +27,6 @@ const Login = () => {
     const bgUrl = "/login-bg.png"; // place file in public/login-bg.png
     const [bgAvailable, setBgAvailable] = useState<boolean>(false);
 
-    // Preload and detect background availability to avoid broken CSS url
-    
     useEffect(() => {
         let mounted = true;
         const img = new Image();
