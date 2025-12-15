@@ -1,9 +1,8 @@
-import { Clock, Play, Calendar, CheckCircle, Pause, Plus, Zap } from "lucide-react";
-import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Header } from "@/components/dashboard/Header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import {
   Table,
@@ -13,47 +12,62 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { formatNextRunTime } from "@/lib/dateUtils";
+import { getRecentRuns, getScheduledJobs, setIsOpenAddSchedulerPopup, setIsOpenScrapperSelectPopup } from "@/redux/slice/schedulerSlice";
+import { Calendar, CheckCircle, Clock, Loader2, Play, Plus, Zap } from "lucide-react";
+import moment from "moment";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import AddSchedulerPopup from "./AddSchedulerPopup";
+import ScrapperSelectPopup from "./ScrapperSelectPopup";
 
-const schedules = [
-  {
-    time: "08:00 AM",
-    frequency: "Daily",
-    active: true,
-    retailers: ["Amazon.ca", "Walmart.ca"],
-    next: "Tomorrow at 8:00 AM",
-  },
-  {
-    time: "12:00 PM",
-    frequency: "Daily",
-    active: true,
-    retailers: ["BestBuy.ca", "Costco.ca"],
-    next: "Today at 12:00 PM",
-  },
-  {
-    time: "06:00 PM",
-    frequency: "Daily",
-    active: true,
-    retailers: ["Amazon.ca", "BestBuy.ca", "Walmart.ca", "Costco.ca"],
-    next: "Today at 6:00 PM",
-  },
-  {
-    time: "11:00 PM",
-    frequency: "Daily",
-    active: false,
-    retailers: ["Amazon.ca"],
-    next: "Paused",
-  },
-];
-
-const recentRuns = [
-  { date: "Today, 8:00 AM", found: 234, sent: 234, duration: "2m 34s", status: "Success" },
-  { date: "Yesterday, 6:00 PM", found: 189, sent: 189, duration: "2m 12s", status: "Success" },
-  { date: "Yesterday, 12:00 PM", found: 156, sent: 156, duration: "1m 58s", status: "Success" },
-  { date: "Yesterday, 8:00 AM", found: 201, sent: 198, duration: "2m 45s", status: "Partial" },
-  { date: "2 days ago, 6:00 PM", found: 0, sent: 0, duration: "0m 15s", status: "Failed" },
-];
+const durationSecondsToText = (seconds) => {
+  if (typeof seconds !== 'number') return "-";
+  const duration = moment.duration(seconds, 'seconds');
+  const minutes = Math.floor(duration.asMinutes());
+  const secs = Math.floor(duration.asSeconds()) % 60;
+  return `${minutes}m ${secs}s`;
+};
 
 const Scheduler = () => {
+  const dispatch = useDispatch();
+  const {
+    scheduledJobs,
+    scheduledJobsLoading,
+    recentRuns,
+    recentRunsLoading
+  } = useSelector((state) => state.scheduler);
+
+  useEffect(() => {
+    dispatch(getScheduledJobs());
+    dispatch(getRecentRuns());
+  }, [dispatch]);
+
+  const schedules = scheduledJobs?.map((job) => ({
+    time: job.time,
+    frequency: Array.isArray(job.days)
+      ? job.days.map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(", ")
+      : "Daily",
+    active: job.is_active,
+    retailers: job.retailer,
+    next: formatNextRunTime(job.next_run),
+  })) || [
+      {
+        time: "08:00 AM",
+        frequency: "Daily",
+        active: true,
+        retailers: "Amazon.ca",
+        next: "Tomorrow at 8:00 AM",
+      },
+      {
+        time: "12:00 PM",
+        frequency: "Daily",
+        active: true,
+        retailers: "BestBuy.ca",
+        next: "Today at 12:00 PM",
+      },
+    ];
+
   return (
     <div className="flex min-h-screen bg-background">
       {/* Decorative background elements */}
@@ -63,10 +77,10 @@ const Scheduler = () => {
       </div>
 
       <Sidebar />
-      
+
       <div className="flex-1 flex flex-col min-h-screen relative">
         <Header title="Scheduler" subtitle="Automate your deal broadcasts" />
-        
+
         <main className="flex-1 p-8 space-y-8 overflow-y-auto">
           {/* Scheduler Status Header */}
           <div className="flex items-center justify-between animate-fade-in">
@@ -76,7 +90,10 @@ const Scheduler = () => {
                 <span className="text-sm font-medium text-success">Scheduler Active</span>
               </div>
             </div>
-            <Button className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg shadow-primary/20">
+            <Button
+              className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg shadow-primary/20"
+              onClick={() => dispatch(setIsOpenScrapperSelectPopup(true))}
+            >
               <Play className="h-4 w-4" />
               Run Now
             </Button>
@@ -90,7 +107,7 @@ const Scheduler = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Active Schedules</p>
-                      <p className="text-3xl font-bold text-foreground mt-1">3</p>
+                      <p className="text-3xl font-bold text-foreground mt-1">{schedules.length}</p>
                     </div>
                     <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
                       <Calendar className="h-6 w-6 text-primary" />
@@ -161,9 +178,9 @@ const Scheduler = () => {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <div className="text-center">
+                        <div className="text-center min-w-[80px]">
                           <p className="text-lg font-bold text-foreground">{schedule.time}</p>
-                          <p className="text-xs text-muted-foreground">{schedule.frequency}</p>
+                          <p className="text-xs text-muted-foreground mt-1 max-w-[120px] truncate" title={schedule.frequency}>{schedule.frequency}</p>
                         </div>
                         <div className="h-10 w-px bg-border" />
                         <div className="flex items-center gap-2">
@@ -176,20 +193,24 @@ const Scheduler = () => {
                       <div className="text-right">
                         <p className="text-xs text-muted-foreground mb-1">Retailers</p>
                         <div className="flex flex-wrap gap-1 justify-end max-w-xs">
-                          {schedule.retailers.map((retailer, i) => (
-                            <Badge key={i} variant="outline" className="text-xs">
-                              {retailer}
-                            </Badge>
-                          ))}
+
+                          <Badge variant="outline" className="text-xs">
+                            {schedule.retailers}
+                          </Badge>
+
                         </div>
                         <p className="text-xs text-muted-foreground mt-2">Next: {schedule.next}</p>
                       </div>
                     </div>
                   </div>
                 ))}
-                
+
                 {/* Add New Schedule Button */}
-                <Button variant="outline" className="w-full gap-2 border-dashed border-2 hover:border-primary hover:bg-primary/5">
+                <Button
+                  variant="outline"
+                  className="w-full gap-2 border-dashed border-2 hover:border-primary hover:bg-primary/5"
+                  onClick={() => dispatch(setIsOpenAddSchedulerPopup(true))}
+                >
                   <Plus className="h-4 w-4" />
                   Add New Schedule
                 </Button>
@@ -204,50 +225,60 @@ const Scheduler = () => {
                 <CardTitle className="text-lg font-semibold">Recent Runs</CardTitle>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-border/50">
-                      <TableHead>Date & Time</TableHead>
-                      <TableHead>Deals Found</TableHead>
-                      <TableHead>Sent</TableHead>
-                      <TableHead>Duration</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recentRuns.map((run, index) => (
-                      <TableRow 
-                        key={index} 
-                        className="border-border/50 animate-fade-in"
-                        style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'forwards' }}
-                      >
-                        <TableCell className="font-medium">{run.date}</TableCell>
-                        <TableCell>{run.found}</TableCell>
-                        <TableCell>{run.sent}</TableCell>
-                        <TableCell>{run.duration}</TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant="outline"
-                            className={
-                              run.status === "Success" 
-                                ? "bg-success/10 text-success border-success/30" 
-                                : run.status === "Partial"
-                                ? "bg-warning/10 text-warning border-warning/30"
-                                : "bg-destructive/10 text-destructive border-destructive/30"
-                            }
+                {recentRunsLoading ? (
+                  <div className="flex justify-center p-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : (
+                  <div className="max-h-[400px] overflow-y-auto">
+                    <Table>
+                      <TableHeader className="bg-background sticky top-0 z-10">
+                        <TableRow className="border-border/50">
+                          <TableHead>Date & Time</TableHead>
+                          <TableHead>Deals Found</TableHead>
+                          <TableHead>Sent</TableHead>
+                          <TableHead>Duration</TableHead>
+                          <TableHead>Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {recentRuns?.map((run, index) => (
+                          <TableRow
+                            key={index}
+                            className="border-border/50 animate-fade-in"
+                            style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'forwards' }}
                           >
-                            {run.status}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                            <TableCell className="font-medium">{formatNextRunTime(run.finished_at)}</TableCell>
+                            <TableCell>{run.deals_found}</TableCell>
+                            <TableCell>{run.sent}</TableCell>
+                            <TableCell>{durationSecondsToText(run.duration_seconds)}</TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="outline"
+                                className={
+                                  run.status === "success"
+                                    ? "bg-success/10 text-success border-success/30"
+                                    : run.status === "partial"
+                                      ? "bg-warning/10 text-warning border-warning/30"
+                                      : "bg-destructive/10 text-destructive border-destructive/30"
+                                }
+                              >
+                                {run.status}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </section>
         </main>
       </div>
+      <ScrapperSelectPopup />
+      <AddSchedulerPopup />
     </div>
   );
 };
