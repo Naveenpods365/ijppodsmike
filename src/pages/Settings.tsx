@@ -1,5 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
-import { User, Send, Shield, MessageCircle, Check, X } from "lucide-react";
+import {
+    User,
+    Send,
+    Shield,
+    MessageCircle,
+    Check,
+    X,
+    Eye,
+    EyeOff,
+} from "lucide-react";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Header } from "@/components/dashboard/Header";
 import {
@@ -29,6 +38,15 @@ const Settings = () => {
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
     const [bio, setBio] = useState("");
+    // Password reset states
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [passwordError, setPasswordError] = useState("");
+    const [passwordSuccess, setPasswordSuccess] = useState("");
 
     // Observe section visibility to highlight active link
     useEffect(() => {
@@ -205,6 +223,57 @@ const Settings = () => {
             title: "Connection tested",
             description: "WhatsApp connection is working properly.",
         });
+    };
+
+    const handlePasswordReset = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setPasswordError("");
+        setPasswordSuccess("");
+
+        // Validate passwords match
+        if (newPassword !== confirmPassword) {
+            setPasswordError("New passwords do not match");
+            return;
+        }
+
+        // Additional password strength validation can be added here
+        if (newPassword.length < 8) {
+            setPasswordError("Password must be at least 8 characters long");
+            return;
+        }
+
+        try {
+            setSaving(true);
+            await api.post("/auth/password-reset", {
+                email: email,
+                old_password: currentPassword,
+                new_password: newPassword,
+            });
+
+            setPasswordSuccess("Password updated successfully!");
+            // Reset form
+            setCurrentPassword("");
+            setNewPassword("");
+            setConfirmPassword("");
+
+            toast({
+                title: "Success",
+                description: "Your password has been updated successfully.",
+            });
+        } catch (error: any) {
+            console.error("Password reset failed:", error);
+            const errorMessage =
+                error?.response?.data?.message ||
+                "Failed to update password. Please try again.";
+            setPasswordError(errorMessage);
+            toast({
+                title: "Error",
+                description: errorMessage,
+                variant: "destructive",
+            });
+        } finally {
+            setSaving(false);
+        }
     };
 
     return (
@@ -465,52 +534,159 @@ const Settings = () => {
                             >
                                 <Card className="border-border/50 bg-card/50 backdrop-blur-sm animate-slide-up">
                                     <CardHeader>
-                                        <CardTitle>Security Settings</CardTitle>
+                                        <CardTitle>Change Password</CardTitle>
                                         <CardDescription>
-                                            Manage your account security
+                                            Update your account password
                                         </CardDescription>
                                     </CardHeader>
-                                    <CardContent className="space-y-6">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="currentPassword">
-                                                Current Password
-                                            </Label>
-                                            <Input
-                                                id="currentPassword"
-                                                type="password"
-                                                placeholder="Enter current password"
-                                                className="h-11"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="newPassword">
-                                                New Password
-                                            </Label>
-                                            <Input
-                                                id="newPassword"
-                                                type="password"
-                                                placeholder="Enter new password"
-                                                className="h-11"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="confirmPassword">
-                                                Confirm New Password
-                                            </Label>
-                                            <Input
-                                                id="confirmPassword"
-                                                type="password"
-                                                placeholder="Confirm new password"
-                                                className="h-11"
-                                            />
-                                        </div>
-                                        <Button
-                                            variant="outline"
-                                            className="gap-2"
+                                    <CardContent>
+                                        <form
+                                            onSubmit={handlePasswordReset}
+                                            className="space-y-4"
                                         >
-                                            <Shield className="h-4 w-4" />
-                                            Update Password
-                                        </Button>
+                                            {passwordError && (
+                                                <div className="p-3 text-sm text-red-600 bg-red-50 rounded-md">
+                                                    {passwordError}
+                                                </div>
+                                            )}
+                                            {passwordSuccess && (
+                                                <div className="p-3 text-sm text-green-600 bg-green-50 rounded-md">
+                                                    {passwordSuccess}
+                                                </div>
+                                            )}
+                                            <div className="space-y-2">
+                                                <Label htmlFor="currentPassword">
+                                                    Current Password
+                                                </Label>
+                                                <div className="relative">
+                                                    <Input
+                                                        id="currentPassword"
+                                                        type={
+                                                            showCurrentPassword
+                                                                ? "text"
+                                                                : "password"
+                                                        }
+                                                        placeholder="Enter current password"
+                                                        className="h-11 pr-10"
+                                                        value={currentPassword}
+                                                        onChange={(e) =>
+                                                            setCurrentPassword(
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                        required
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                                        onClick={() =>
+                                                            setShowCurrentPassword(
+                                                                !showCurrentPassword
+                                                            )
+                                                        }
+                                                    >
+                                                        {showCurrentPassword ? (
+                                                            <EyeOff className="h-5 w-5" />
+                                                        ) : (
+                                                            <Eye className="h-5 w-5" />
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="newPassword">
+                                                    New Password
+                                                </Label>
+                                                <div className="relative">
+                                                    <Input
+                                                        id="newPassword"
+                                                        type={
+                                                            showNewPassword
+                                                                ? "text"
+                                                                : "password"
+                                                        }
+                                                        placeholder="Enter new password"
+                                                        className="h-11 pr-10"
+                                                        value={newPassword}
+                                                        onChange={(e) =>
+                                                            setNewPassword(
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                        required
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                                        onClick={() =>
+                                                            setShowNewPassword(
+                                                                !showNewPassword
+                                                            )
+                                                        }
+                                                    >
+                                                        {showNewPassword ? (
+                                                            <EyeOff className="h-5 w-5" />
+                                                        ) : (
+                                                            <Eye className="h-5 w-5" />
+                                                        )}
+                                                    </button>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground">
+                                                    Must be at least 8
+                                                    characters long
+                                                </p>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="confirmPassword">
+                                                    Confirm New Password
+                                                </Label>
+                                                <div className="relative">
+                                                    <Input
+                                                        id="confirmPassword"
+                                                        type={
+                                                            showConfirmPassword
+                                                                ? "text"
+                                                                : "password"
+                                                        }
+                                                        placeholder="Confirm new password"
+                                                        className="h-11 pr-10 w-full"
+                                                        value={confirmPassword}
+                                                        onChange={(e) =>
+                                                            setConfirmPassword(
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                        required
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                                        onClick={() =>
+                                                            setShowConfirmPassword(
+                                                                !showConfirmPassword
+                                                            )
+                                                        }
+                                                    >
+                                                        {showConfirmPassword ? (
+                                                            <EyeOff className="h-5 w-5" />
+                                                        ) : (
+                                                            <Eye className="h-5 w-5" />
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div className="pt-2">
+                                                <Button
+                                                    type="submit"
+                                                    className="w-full h-11 bg-primary hover:bg-primary/90"
+                                                    disabled={saving}
+                                                >
+                                                    {saving
+                                                        ? "Updating..."
+                                                        : "Update Password"}
+                                                </Button>
+                                            </div>
+                                        </form>
                                     </CardContent>
                                 </Card>
                             </div>
