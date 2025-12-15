@@ -27,6 +27,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import api from "@/lib/axiosInstance";
 
+type TelegramSettings = {
+    is_connected?: boolean;
+    bot_token?: string | null;
+    chat_id?: string | null;
+    status?: string | null;
+};
+
+type WhatsappSettings = {
+    is_connected?: boolean;
+    phone_number?: string | null;
+    broadcast_group_id?: string | null;
+    status?: string | null;
+};
+
 const Settings = () => {
     const { toast } = useToast();
     const [activeTab, setActiveTab] = useState("profile");
@@ -38,6 +52,10 @@ const Settings = () => {
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
     const [bio, setBio] = useState("");
+    const [telegramSettings, setTelegramSettings] =
+        useState<TelegramSettings | null>(null);
+    const [whatsappSettings, setWhatsappSettings] =
+        useState<WhatsappSettings | null>(null);
     // Password reset states
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
@@ -97,6 +115,8 @@ const Settings = () => {
                 setEmail(u.email || "");
                 setPhone(u.phone_number || "");
                 setBio(u.bio || "");
+                setTelegramSettings(u.telegram_settings || null);
+                setWhatsappSettings(u.whatsapp_settings || null);
                 setLoadingProfile(false);
                 return; // success
             } catch (e: any) {
@@ -461,13 +481,22 @@ const Settings = () => {
                                                     Send deals to your channel
                                                 </CardDescription>
                                             </div>
-                                            <Badge
-                                                variant="outline"
-                                                className="bg-muted text-muted-foreground border-muted gap-1.5"
-                                            >
-                                                <X className="h-3 w-3" />
-                                                Not Connected
-                                            </Badge>
+                                            {telegramSettings?.is_connected ? (
+                                                <Badge className="bg-success/20 text-success border-success/30 gap-1.5">
+                                                    <Check className="h-3 w-3" />
+                                                    {telegramSettings?.status ||
+                                                        "Active"}
+                                                </Badge>
+                                            ) : (
+                                                <Badge
+                                                    variant="outline"
+                                                    className="bg-muted text-muted-foreground border-muted gap-1.5"
+                                                >
+                                                    <X className="h-3 w-3" />
+                                                    {telegramSettings?.status ||
+                                                        "Not Connected"}
+                                                </Badge>
+                                            )}
                                         </div>
                                     </CardHeader>
                                     <CardContent className="space-y-6">
@@ -479,7 +508,9 @@ const Settings = () => {
                                                 </span>
                                             </div>
                                             <p className="text-sm text-muted-foreground">
-                                                Send deals to your channel
+                                                {telegramSettings?.is_connected
+                                                    ? "Telegram is connected"
+                                                    : "Telegram is not connected"}
                                             </p>
                                         </div>
 
@@ -490,8 +521,13 @@ const Settings = () => {
                                             <Input
                                                 id="botToken"
                                                 type="password"
-                                                placeholder="Enter your Telegram bot token"
+                                                placeholder="Not set"
                                                 className="h-11"
+                                                value={
+                                                    telegramSettings?.bot_token ||
+                                                    ""
+                                                }
+                                                disabled
                                             />
                                             <p className="text-xs text-muted-foreground">
                                                 Get your bot token from
@@ -505,8 +541,13 @@ const Settings = () => {
                                             </Label>
                                             <Input
                                                 id="channelId"
-                                                placeholder="Enter your channel or chat ID"
+                                                placeholder="Not set"
                                                 className="h-11"
+                                                value={
+                                                    telegramSettings?.chat_id ||
+                                                    ""
+                                                }
+                                                disabled
                                             />
                                             <p className="text-xs text-muted-foreground">
                                                 Use @username for public
@@ -517,7 +558,7 @@ const Settings = () => {
 
                                         <Button
                                             variant="outline"
-                                            onClick={handleTestTelegram}
+                                            disabled
                                             className="gap-2"
                                         >
                                             <Send className="h-4 w-4" />
@@ -708,34 +749,60 @@ const Settings = () => {
                                                     groups
                                                 </CardDescription>
                                             </div>
-                                            <Badge className="bg-success/20 text-success border-success/30 gap-1.5">
-                                                <Check className="h-3 w-3" />
-                                                Active
-                                            </Badge>
+                                            {whatsappSettings?.is_connected ? (
+                                                <Badge className="bg-success/20 text-success border-success/30 gap-1.5">
+                                                    <Check className="h-3 w-3" />
+                                                    {whatsappSettings?.status ||
+                                                        "Active"}
+                                                </Badge>
+                                            ) : (
+                                                <Badge
+                                                    variant="outline"
+                                                    className="bg-muted text-muted-foreground border-muted gap-1.5"
+                                                >
+                                                    <X className="h-3 w-3" />
+                                                    {whatsappSettings?.status ||
+                                                        "Not Connected"}
+                                                </Badge>
+                                            )}
                                         </div>
                                     </CardHeader>
                                     <CardContent className="space-y-6">
-                                        <div className="p-4 rounded-xl bg-success/5 border border-success/20">
+                                        <div className="p-4 rounded-xl bg-muted/50 border border-border/50">
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="h-10 w-10 rounded-full bg-success/10 flex items-center justify-center">
-                                                        <MessageCircle className="h-5 w-5 text-success" />
+                                                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                                        <MessageCircle className="h-5 w-5 text-primary" />
                                                     </div>
                                                     <div>
                                                         <p className="font-medium text-foreground">
-                                                            WhatsApp Connected
+                                                            {whatsappSettings?.is_connected
+                                                                ? "WhatsApp Connected"
+                                                                : "WhatsApp Not Connected"}
                                                         </p>
                                                         <p className="text-sm text-muted-foreground">
-                                                            +1 (555) 123-4567
+                                                            {whatsappSettings?.phone_number ||
+                                                                "—"}
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <Badge
-                                                    variant="outline"
-                                                    className="bg-success/10 text-success border-success/30"
-                                                >
-                                                    Active
-                                                </Badge>
+                                                {whatsappSettings?.is_connected ? (
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="bg-success/10 text-success border-success/30"
+                                                    >
+                                                        {whatsappSettings?.status ||
+                                                            "Active"}
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge
+                                                        variant="outline"
+                                                        className="bg-muted text-muted-foreground border-muted"
+                                                    >
+                                                        {whatsappSettings?.status ||
+                                                            "Inactive"}
+                                                    </Badge>
+                                                )}
                                             </div>
                                         </div>
 
@@ -745,14 +812,19 @@ const Settings = () => {
                                             </Label>
                                             <Input
                                                 id="groupId"
-                                                defaultValue="120363XXX@g.us"
+                                                value={
+                                                    whatsappSettings?.broadcast_group_id ||
+                                                    ""
+                                                }
+                                                placeholder="Not set"
                                                 className="h-11"
+                                                disabled
                                             />
                                         </div>
 
                                         <Button
                                             variant="outline"
-                                            onClick={handleTestWhatsApp}
+                                            disabled
                                             className="gap-2"
                                         >
                                             <MessageCircle className="h-4 w-4" />
@@ -771,7 +843,7 @@ const Settings = () => {
                     >
                         <Button
                             onClick={handleSave}
-                            className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg shadow-primary/20"
+                            className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg shadow-primary/20 mt-[1rem]"
                         >
                             <Check className="h-4 w-4" />
                             Save All Changes
