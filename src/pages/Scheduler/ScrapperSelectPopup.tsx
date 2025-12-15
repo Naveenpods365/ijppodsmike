@@ -13,7 +13,7 @@ const ScrapperSelectPopup = () => {
         scrapeCostcoLoading,
         scrapeBestBuyLoading,
         scrapeWalmartLoading
-    } = useSelector((state) => state.scheduler);
+    } = useSelector((state: any) => state.scheduler);
 
     const handleOpenChange = (open) => {
         dispatch(setIsOpenScrapperSelectPopup(open));

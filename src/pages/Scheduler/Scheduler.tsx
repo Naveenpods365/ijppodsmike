@@ -36,7 +36,7 @@ const Scheduler = () => {
     scheduledJobsLoading,
     recentRuns,
     recentRunsLoading
-  } = useSelector((state) => state.scheduler);
+  } = useSelector((state: any) => state.scheduler);
 
   useEffect(() => {
     dispatch(getScheduledJobs());
