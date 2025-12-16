@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import api from "@/lib/axiosInstance";
 import { useToast } from "@/hooks/use-toast";
 
@@ -82,12 +83,14 @@ export const RecentDealsTable = () => {
     const { toast } = useToast();
     const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("All");
     const [deals, setDeals] = useState<Deal[]>([]);
+    const [loadingDeals, setLoadingDeals] = useState(false);
 
     useEffect(() => {
         let mounted = true;
 
         const loadRecentDeals = async () => {
             try {
+                if (mounted) setLoadingDeals(true);
                 const res = await api.get("/dashboard/recent-deals");
                 const raw = (res.data || []) as ApiRecentDeal[];
                 const normalized = Array.isArray(raw)
@@ -101,6 +104,8 @@ export const RecentDealsTable = () => {
                     description: e?.response?.data?.message || e?.message,
                     variant: "destructive",
                 });
+            } finally {
+                if (mounted) setLoadingDeals(false);
             }
         };
 
@@ -143,14 +148,6 @@ export const RecentDealsTable = () => {
                             Latest scraped deals from your sources
                         </p>
                     </div>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2 rounded-xl"
-                    >
-                        <ExternalLink className="h-4 w-4" />
-                        Export
-                    </Button>
                 </div>
 
                 <div className="flex gap-2 p-1 bg-muted/50 rounded-xl w-fit">
@@ -212,7 +209,39 @@ export const RecentDealsTable = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                        {filteredDeals.length === 0 ? (
+                        {loadingDeals ? (
+                            Array.from({ length: 8 }).map((_, idx) => (
+                                <tr key={`s-${idx}`}>
+                                    <td className="px-4 py-3">
+                                        <div className="flex items-center gap-3">
+                                            <Skeleton className="h-9 w-9 rounded-lg" />
+                                            <Skeleton className="h-4 w-[220px]" />
+                                        </div>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <Skeleton className="h-4 w-[120px]" />
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <Skeleton className="h-4 w-[70px]" />
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <Skeleton className="h-6 w-[80px] rounded-lg" />
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <Skeleton className="h-4 w-[90px]" />
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <Skeleton className="h-6 w-[90px] rounded-full" />
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <Skeleton className="h-8 w-[90px] rounded-xl" />
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <Skeleton className="h-6 w-[90px] rounded-full" />
+                                    </td>
+                                </tr>
+                            ))
+                        ) : filteredDeals.length === 0 ? (
                             <tr>
                                 <td
                                     colSpan={8}

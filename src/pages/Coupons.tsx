@@ -18,6 +18,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useCouponsMetricsWebSocket } from "@/hooks/useCouponsMetricsWebSocket";
 import api from "@/lib/axiosInstance";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
     Check,
     CheckCircle,
@@ -675,21 +676,45 @@ const Coupons = () => {
 
                     {/* Coupons Grid */}
                     <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                        {filteredCoupons.map((coupon, index) => (
-                            <div
-                                key={coupon.id}
-                                className="animate-slide-up opacity-0"
-                                style={{
-                                    animationDelay: `${index * 100}ms`,
-                                    animationFillMode: "forwards",
-                                }}
-                            >
-                                <CouponCard
-                                    coupon={coupon}
-                                    onCopy={handleCopy}
-                                />
-                            </div>
-                        ))}
+                        {loadingCoupons
+                            ? Array.from({ length: 6 }).map((_, idx) => (
+                                  <div
+                                      key={`coupon-s-${idx}`}
+                                      className="relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm rounded-xl p-5"
+                                  >
+                                      <div className="flex items-start justify-between mb-4">
+                                          <div className="flex items-center gap-3">
+                                              <Skeleton className="h-7 w-24 rounded-lg" />
+                                              <Skeleton className="h-6 w-20 rounded-full" />
+                                          </div>
+                                          <Skeleton className="h-6 w-16 rounded-full" />
+                                      </div>
+                                      <Skeleton className="h-5 w-[85%] mb-3" />
+                                      <div className="flex items-center gap-2 mb-4">
+                                          <Skeleton className="h-5 w-24 rounded-full" />
+                                          <Skeleton className="h-4 w-20" />
+                                      </div>
+                                      <div className="flex items-center justify-between pt-3 border-t border-border/50">
+                                          <Skeleton className="h-4 w-40" />
+                                          <Skeleton className="h-8 w-20 rounded-xl" />
+                                      </div>
+                                  </div>
+                              ))
+                            : filteredCoupons.map((coupon, index) => (
+                                  <div
+                                      key={coupon.id}
+                                      className="animate-slide-up opacity-0"
+                                      style={{
+                                          animationDelay: `${index * 100}ms`,
+                                          animationFillMode: "forwards",
+                                      }}
+                                  >
+                                      <CouponCard
+                                          coupon={coupon}
+                                          onCopy={handleCopy}
+                                      />
+                                  </div>
+                              ))}
                     </section>
 
                     {!loadingCoupons && coupons.length === 0 && (
