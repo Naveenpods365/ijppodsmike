@@ -127,6 +127,19 @@ export const scheduleWalmart = createAsyncThunk(
   }
 );
 
+export const toggleSchedule = createAsyncThunk(
+  "scheduler/toggleSchedule",
+  async ({ id, is_active }, { rejectWithValue }) => {
+    try {
+      const { data } = await api.patch(`/schedule/${encodeURIComponent(id)}/toggle`, { is_active });
+      return { id, is_active }; // Return the updated status to update local state optimistically or confirmed
+    } catch (error) {
+      console.error("Error toggling schedule:", error);
+      return rejectWithValue(error.response?.data || "Unknown error");
+    }
+  }
+);
+
 const schedulerSlice = createSlice({
   name: "scheduler",
   initialState,
@@ -237,6 +250,27 @@ const schedulerSlice = createSlice({
       .addCase(scheduleWalmart.rejected, (state, { payload }) => {
         state.scheduleWalmartLoading = false;
         state.scheduleError = payload;
+      })
+      // Toggle Schedule
+      .addCase(toggleSchedule.pending, (state, action) => {
+        const index = state.scheduledJobs.findIndex(job => job.id === action.meta.arg.id);
+        if (index !== -1) {
+          state.scheduledJobs[index].is_active = action.meta.arg.is_active;
+        }
+      })
+      .addCase(toggleSchedule.fulfilled, (state, { payload }) => {
+        const index = state.scheduledJobs.findIndex(job => job.id === payload.id);
+        if (index !== -1) {
+          state.scheduledJobs[index].is_active = payload.is_active;
+        }
+      })
+      .addCase(toggleSchedule.rejected, (state, action) => {
+        console.error("Toggle schedule failed:", action.payload || action.error);
+         const index = state.scheduledJobs.findIndex(job => job.id === action.meta.arg.id);
+        if (index !== -1) {
+          // Revert to the opposite of what was attempted
+          state.scheduledJobs[index].is_active = !action.meta.arg.is_active;
+        }
       });
   },
 });

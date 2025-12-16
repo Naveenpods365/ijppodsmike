@@ -12,8 +12,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useToast } from "@/components/ui/use-toast";
 import { formatNextRunTime } from "@/lib/dateUtils";
-import { getRecentRuns, getScheduledJobs, setIsOpenAddSchedulerPopup, setIsOpenScrapperSelectPopup } from "@/redux/slice/schedulerSlice";
+import { getRecentRuns, getScheduledJobs, setIsOpenAddSchedulerPopup, setIsOpenScrapperSelectPopup, toggleSchedule } from "@/redux/slice/schedulerSlice";
 import { Calendar, CheckCircle, Clock, Loader2, Play, Plus, Zap } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
@@ -32,6 +33,7 @@ const durationSecondsToText = (seconds) => {
 };
 
 const Scheduler = () => {
+  const { toast } = useToast();
   const dispatch = useDispatch();
   const {
     scheduledJobs,
@@ -52,7 +54,20 @@ const Scheduler = () => {
     dispatch(getRecentRuns());
   }, [dispatch]);
 
+  const handleToggleSchedule = async (id, isActive) => {
+    try {
+      await dispatch(toggleSchedule({ id, is_active: isActive })).unwrap();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update schedule status.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const schedules = scheduledJobs?.map((job) => ({
+    id: job.id,
     time: job.time,
     frequency: Array.isArray(job.days)
       ? job.days.map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(", ")
@@ -200,7 +215,7 @@ const Scheduler = () => {
                         </div>
                         <div className="h-10 w-px bg-border" />
                         <div className="flex items-center gap-2">
-                          <Switch checked={schedule.active} />
+                          <Switch checked={schedule.active} onCheckedChange={(checked) => handleToggleSchedule(schedule.id, checked)} />
                           <Badge variant={schedule.active ? "default" : "secondary"} className={schedule.active ? "bg-success/20 text-success border-success/30" : ""}>
                             {schedule.active ? "Active" : "Paused"}
                           </Badge>
