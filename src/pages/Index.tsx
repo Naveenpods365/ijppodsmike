@@ -113,7 +113,7 @@ const Index = () => {
                             animationFillMode: "forwards",
                         }}
                     >
-                        <TopCategoriesSection />
+                        {/* <TopCategoriesSection /> */}
                     </section>
 
                     {/* Recent Deals Table */}
