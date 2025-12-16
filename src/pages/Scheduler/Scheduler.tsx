@@ -13,13 +13,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/components/ui/use-toast";
+import { useSchedulerMetricsWebSocket } from "@/hooks/useSchedulerMetricsWebSocket";
 import { formatNextRunTime } from "@/lib/dateUtils";
 import { getRecentRuns, getScheduledJobs, setIsOpenAddSchedulerPopup, setIsOpenScrapperSelectPopup, toggleSchedule } from "@/redux/slice/schedulerSlice";
 import { Calendar, CheckCircle, Clock, Loader2, Play, Plus, Zap } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import AddSchedulerPopup from "./AddSchedulerPopup";
+import AddSchedulerPopup from "./AddSchedulerPopup.tsx";
 import DealsPopup from "./DealsPopup";
 import ScrapingLoadingPopup from "./ScrapingLoadingPopup";
 import ScrapperSelectPopup from "./ScrapperSelectPopup";
@@ -30,6 +31,14 @@ const durationSecondsToText = (seconds) => {
   const minutes = Math.floor(duration.asMinutes());
   const secs = Math.floor(duration.asSeconds()) % 60;
   return `${minutes}m ${secs}s`;
+};
+
+const formatNextRunInSeconds = (seconds) => {
+  if (!seconds && seconds !== 0) return "-";
+  const duration = moment.duration(seconds, 'seconds');
+  const hours = Math.floor(duration.asHours());
+  const minutes = Math.floor(duration.minutes());
+  return `${hours}h ${minutes}m`;
 };
 
 const Scheduler = () => {
@@ -44,6 +53,8 @@ const Scheduler = () => {
     scrapeBestBuyLoading,
     scrapeWalmartLoading
   } = useSelector((state: any) => state.scheduler);
+
+  const { metrics } = useSchedulerMetricsWebSocket();
 
   const isLoading = scrapeCostcoLoading || scrapeBestBuyLoading || scrapeWalmartLoading;
 
@@ -131,7 +142,7 @@ const Scheduler = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Active Schedules</p>
-                      <p className="text-3xl font-bold text-foreground mt-1">{schedules.length}</p>
+                      <p className="text-3xl font-bold text-foreground mt-1">{metrics.active_schedules}</p>
                     </div>
                     <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
                       <Calendar className="h-6 w-6 text-primary" />
@@ -146,7 +157,7 @@ const Scheduler = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Next Run</p>
-                      <p className="text-3xl font-bold text-foreground mt-1">2h 15m</p>
+                      <p className="text-3xl font-bold text-foreground mt-1">{formatNextRunInSeconds(metrics.next_run_in_seconds)}</p>
                     </div>
                     <div className="h-12 w-12 rounded-xl bg-accent/10 flex items-center justify-center">
                       <Clock className="h-6 w-6 text-accent" />
@@ -161,7 +172,7 @@ const Scheduler = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Runs Today</p>
-                      <p className="text-3xl font-bold text-foreground mt-1">2</p>
+                      <p className="text-3xl font-bold text-foreground mt-1">{metrics.runs_today}</p>
                     </div>
                     <div className="h-12 w-12 rounded-xl bg-warning/10 flex items-center justify-center">
                       <Zap className="h-6 w-6 text-warning" />
@@ -176,7 +187,7 @@ const Scheduler = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">Success Rate</p>
-                      <p className="text-3xl font-bold text-foreground mt-1">98.5%</p>
+                      <p className="text-3xl font-bold text-foreground mt-1">{metrics.success_rate.toFixed(1)}%</p>
                     </div>
                     <div className="h-12 w-12 rounded-xl bg-success/10 flex items-center justify-center">
                       <CheckCircle className="h-6 w-6 text-success" />

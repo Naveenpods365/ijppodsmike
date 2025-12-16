@@ -21,16 +21,16 @@ const daysOfWeekOptions = [
 const AddSchedulerPopup = () => {
   const dispatch = useDispatch();
   const { toast } = useToast();
-  const { 
+  const {
     isOpenAddSchedulerPopup,
     scheduleCostcoLoading,
     scheduleBestBuyLoading,
     scheduleWalmartLoading
-  } = useSelector((state) => state.scheduler);
+  } = useSelector((state: any) => state.scheduler);
 
   const [step, setStep] = useState(1);
   const [selectedRetailer, setSelectedRetailer] = useState(null);
-  
+
   // Form State
   const [jobId, setJobId] = useState("");
   const [time, setTime] = useState(""); // hh:mm format
@@ -62,34 +62,34 @@ const AddSchedulerPopup = () => {
       if (selectedDays.includes("*")) {
         setSelectedDays([]);
       } else {
-         setSelectedDays(["*"]);
+        setSelectedDays(["*"]);
       }
     } else {
-        if (selectedDays.includes("*")) {
-            setSelectedDays([dayId]);
+      if (selectedDays.includes("*")) {
+        setSelectedDays([dayId]);
+      } else {
+        if (selectedDays.includes(dayId)) {
+          setSelectedDays(selectedDays.filter(d => d !== dayId));
         } else {
-            if (selectedDays.includes(dayId)) {
-                setSelectedDays(selectedDays.filter(d => d !== dayId));
-            } else {
-                setSelectedDays([...selectedDays, dayId]);
-            }
+          setSelectedDays([...selectedDays, dayId]);
         }
+      }
     }
   };
 
   const handleSubmit = async () => {
     if (!jobId || !time || selectedDays.length === 0) {
-        toast({
-            title: "Validation Error",
-            description: "Please fill in all required fields (Job ID, Time, Days of Week).",
-            variant: "destructive",
-        });
-        return;
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields (Job ID, Time, Days of Week).",
+        variant: "destructive",
+      });
+      return;
     }
 
     const [hour, minute] = time.split(":").map(Number);
     const daysString = selectedDays.includes("*") ? "*" : selectedDays.join(",");
-    
+
     const payload = {
       mode: "cron",
       job_id: jobId,
@@ -161,34 +161,32 @@ const AddSchedulerPopup = () => {
 
               <div className="space-y-2">
                 <Label>Time</Label>
-                <Input 
-                   type="time" 
-                   value={time} 
-                   onChange={(e) => setTime(e.target.value)} 
+                <Input
+                  type="time"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
                 />
               </div>
 
               <div className="space-y-2">
                 <Label>Days of Week</Label>
                 <div className="flex flex-wrap gap-2">
-                  <div 
-                    className={`border rounded-lg px-3 py-2 text-sm font-medium cursor-pointer transition-colors ${
-                      selectedDays.includes("*") 
-                        ? "bg-primary text-primary-foreground border-primary" 
+                  <div
+                    className={`border rounded-lg px-3 py-2 text-sm font-medium cursor-pointer transition-colors ${selectedDays.includes("*")
+                        ? "bg-primary text-primary-foreground border-primary"
                         : "bg-background hover:bg-muted border-input"
-                    }`}
+                      }`}
                     onClick={() => handleDayToggle("*")}
                   >
                     Select All
                   </div>
                   {daysOfWeekOptions.map((day) => (
-                    <div 
-                      key={day.id} 
-                      className={`border rounded-lg px-3 py-2 text-sm font-medium cursor-pointer transition-colors ${
-                        (selectedDays.includes(day.id) || selectedDays.includes("*"))
-                          ? "bg-primary/20 text-primary border-primary/30" 
+                    <div
+                      key={day.id}
+                      className={`border rounded-lg px-3 py-2 text-sm font-medium cursor-pointer transition-colors ${(selectedDays.includes(day.id) || selectedDays.includes("*"))
+                          ? "bg-primary/20 text-primary border-primary/30"
                           : "bg-background hover:bg-muted border-input"
-                      } ${selectedDays.includes("*") ? "opacity-50 cursor-not-allowed" : ""}`}
+                        } ${selectedDays.includes("*") ? "opacity-50 cursor-not-allowed" : ""}`}
                       onClick={() => !selectedDays.includes("*") && handleDayToggle(day.id)}
                     >
                       {day.label}
@@ -197,9 +195,9 @@ const AddSchedulerPopup = () => {
                 </div>
               </div>
 
-              <Button 
-                className={`w-full ${buttonStyle}`} 
-                onClick={handleSubmit} 
+              <Button
+                className={`w-full ${buttonStyle}`}
+                onClick={handleSubmit}
                 disabled={getLoadingState()}
               >
                 {getLoadingState() && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
