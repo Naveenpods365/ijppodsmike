@@ -243,7 +243,7 @@ export const RecentDealsTable = () => {
                                 </td>
                             </tr>
                         ) : (
-                            filteredDeals.map((deal, index) => (
+                            filteredDeals?.map((deal, index) => (
                                 <tr
                                     key={deal.id}
                                     className="group hover:bg-muted/30 transition-all duration-300 animate-fade-in"

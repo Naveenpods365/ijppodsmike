@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { scrapeBestBuy, scrapeCostco, scrapeWalmart, setIsOpenScrapperSelectPopup } from "@/redux/slice/schedulerSlice";
-import { Loader2 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 
 const ScrapperSelectPopup = () => {
@@ -15,11 +14,14 @@ const ScrapperSelectPopup = () => {
         scrapeWalmartLoading
     } = useSelector((state: any) => state.scheduler);
 
+    const isLoading = scrapeCostcoLoading || scrapeBestBuyLoading || scrapeWalmartLoading;
+
     const handleOpenChange = (open) => {
         dispatch(setIsOpenScrapperSelectPopup(open));
     };
 
     const handleScrape = async (scraperName, action, payload) => {
+        dispatch(setIsOpenScrapperSelectPopup(false));
         try {
             await dispatch(action(payload)).unwrap();
             toast({
@@ -50,25 +52,22 @@ const ScrapperSelectPopup = () => {
                     <Button
                         className={buttonStyle}
                         onClick={() => handleScrape("Costco Scraper", scrapeCostco, { keyword: "OFF", max_pages: 2 })}
-                        disabled={scrapeCostcoLoading}
+                        disabled={isLoading}
                     >
-                        {scrapeCostcoLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                         Costco Scraper
                     </Button>
                     <Button
                         className={buttonStyle}
                         onClick={() => handleScrape("Best Buy Scraper", scrapeBestBuy, { collection_id: "16074", max_pages: 10 })}
-                        disabled={scrapeBestBuyLoading}
+                        disabled={isLoading}
                     >
-                        {scrapeBestBuyLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                         Best Buy Scraper
                     </Button>
                     <Button
                         className={buttonStyle}
                         onClick={() => handleScrape("Walmart Scraper", scrapeWalmart, { keyword: "OFF", max_pages: 5 })}
-                        disabled={scrapeWalmartLoading}
+                        disabled={isLoading}
                     >
-                        {scrapeWalmartLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                         Walmart Scraper
                     </Button>
                     <Button className={buttonStyle} onClick={() => console.log("Amazon Scraper")}>

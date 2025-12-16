@@ -16,9 +16,11 @@ import { formatNextRunTime } from "@/lib/dateUtils";
 import { getRecentRuns, getScheduledJobs, setIsOpenAddSchedulerPopup, setIsOpenScrapperSelectPopup } from "@/redux/slice/schedulerSlice";
 import { Calendar, CheckCircle, Clock, Loader2, Play, Plus, Zap } from "lucide-react";
 import moment from "moment";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import AddSchedulerPopup from "./AddSchedulerPopup";
+import DealsPopup from "./DealsPopup";
+import ScrapingLoadingPopup from "./ScrapingLoadingPopup";
 import ScrapperSelectPopup from "./ScrapperSelectPopup";
 
 const durationSecondsToText = (seconds) => {
@@ -35,8 +37,15 @@ const Scheduler = () => {
     scheduledJobs,
     scheduledJobsLoading,
     recentRuns,
-    recentRunsLoading
+    recentRunsLoading,
+    scrapeCostcoLoading,
+    scrapeBestBuyLoading,
+    scrapeWalmartLoading
   } = useSelector((state: any) => state.scheduler);
+
+  const isLoading = scrapeCostcoLoading || scrapeBestBuyLoading || scrapeWalmartLoading;
+
+  const [showDealsPopup, setShowDealsPopup] = useState(false);
 
   useEffect(() => {
     dispatch(getScheduledJobs());
@@ -95,7 +104,7 @@ const Scheduler = () => {
               onClick={() => dispatch(setIsOpenScrapperSelectPopup(true))}
             >
               <Play className="h-4 w-4" />
-              Run Now
+              Get New Deals
             </Button>
           </div>
 
@@ -168,8 +177,15 @@ const Scheduler = () => {
             <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg font-semibold">Scheduled Runs</CardTitle>
+                <Button
+                  className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90 shadow-lg shadow-primary/20"
+                  onClick={() => dispatch(setIsOpenAddSchedulerPopup(true))}
+                >
+                  <Plus className="h-4 w-4" />
+                  Add New Schedule
+                </Button>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 max-h-[600px] overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-border/50 transition-colors">
                 {schedules.map((schedule, index) => (
                   <div
                     key={index}
@@ -204,16 +220,6 @@ const Scheduler = () => {
                     </div>
                   </div>
                 ))}
-
-                {/* Add New Schedule Button */}
-                <Button
-                  variant="outline"
-                  className="w-full gap-2 border-dashed border-2 hover:border-primary hover:bg-primary/5"
-                  onClick={() => dispatch(setIsOpenAddSchedulerPopup(true))}
-                >
-                  <Plus className="h-4 w-4" />
-                  Add New Schedule
-                </Button>
               </CardContent>
             </Card>
           </section>
@@ -230,7 +236,7 @@ const Scheduler = () => {
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
                 ) : (
-                  <div className="max-h-[400px] overflow-y-auto">
+                  <div className="max-h-[400px] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-border/30 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-border/50 transition-colors">
                     <Table>
                       <TableHeader className="bg-background sticky top-0 z-10">
                         <TableRow className="border-border/50">
@@ -245,8 +251,9 @@ const Scheduler = () => {
                         {recentRuns?.map((run, index) => (
                           <TableRow
                             key={index}
-                            className="border-border/50 animate-fade-in"
+                            className="border-border/50 animate-fade-in hover:bg-muted/50 cursor-pointer"
                             style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'forwards' }}
+                            onClick={() => setShowDealsPopup(true)}
                           >
                             <TableCell className="font-medium">{formatNextRunTime(run.finished_at)}</TableCell>
                             <TableCell>{run.deals_found}</TableCell>
@@ -279,6 +286,10 @@ const Scheduler = () => {
       </div>
       <ScrapperSelectPopup />
       <AddSchedulerPopup />
+      <ScrapperSelectPopup />
+      <AddSchedulerPopup />
+      <DealsPopup open={showDealsPopup} onOpenChange={setShowDealsPopup} />
+      <ScrapingLoadingPopup open={isLoading} />
     </div>
   );
 };

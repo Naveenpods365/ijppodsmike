@@ -41,10 +41,10 @@ export const Header = ({ title = "Dashboard", subtitle = "Welcome back! Here's y
             <span className="absolute top-2 right-2 h-2.5 w-2.5 bg-accent rounded-full border-2 border-card animate-pulse" />
           </Button>
 
-          <Button className="h-11 gap-2 rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity shadow-lg shadow-primary/20">
+          {/* <Button className="h-11 gap-2 rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity shadow-lg shadow-primary/20">
             <Sparkles className="h-4 w-4" />
             <span className="font-semibold">New Deal</span>
-          </Button>
+          </Button> */}
 
           <div className="relative">
             <Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl bg-gradient-to-br from-secondary to-muted overflow-hidden group">

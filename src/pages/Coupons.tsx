@@ -1,22 +1,8 @@
-import { useEffect, useState } from "react";
-import {
-    Ticket,
-    CheckCircle,
-    TrendingUp,
-    Percent,
-    Search,
-    Plus,
-    Copy,
-    Check,
-} from "lucide-react";
-import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Header } from "@/components/dashboard/Header";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
     Dialog,
     DialogContent,
@@ -26,8 +12,23 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { useCouponsMetricsWebSocket } from "@/hooks/useCouponsMetricsWebSocket";
 import api from "@/lib/axiosInstance";
+import {
+    Check,
+    CheckCircle,
+    Copy,
+    ExternalLink,
+    Percent,
+    Plus,
+    Search,
+    Ticket
+} from "lucide-react";
+import { useEffect, useState } from "react";
 
 type ApiCouponCard = {
     id?: string;
@@ -142,9 +143,8 @@ const CouponCard = ({
 
     return (
         <Card
-            className={`relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-all duration-300 group ${
-                !coupon.active ? "opacity-60" : ""
-            }`}
+            className={`relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-all duration-300 group ${!coupon.active ? "opacity-60" : ""
+                }`}
         >
             <CardContent className="p-5">
                 <div className="flex items-start justify-between mb-4">
@@ -158,16 +158,26 @@ const CouponCard = ({
                             {coupon.discount}
                         </Badge>
                     </div>
-                    <Badge
-                        variant="outline"
-                        className={
-                            coupon.active
-                                ? "bg-success/10 text-success border-success/30"
-                                : "bg-muted text-muted-foreground border-muted"
-                        }
-                    >
-                        {coupon.active ? "Active" : "Expired"}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                        <Badge
+                            variant="outline"
+                            className={
+                                coupon.active
+                                    ? "bg-success/10 text-success border-success/30"
+                                    : "bg-muted text-muted-foreground border-muted"
+                            }
+                        >
+                            {coupon.active ? "Active" : "Expired"}
+                        </Badge>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 rounded-full hover:bg-muted group/btn"
+                            onClick={() => window.open("https://google.com", "_blank")}
+                        >
+                            <ExternalLink className="h-3.5 w-3.5 transition-transform duration-300 group-hover/btn:translate-x-0.5 text-muted-foreground" />
+                        </Button>
+                    </div>
                 </div>
 
                 <h3 className="font-semibold text-foreground mb-2 line-clamp-1">
@@ -218,11 +228,14 @@ const Coupons = () => {
     const [creatingCoupon, setCreatingCoupon] = useState(false);
     const [newCode, setNewCode] = useState("");
     const [newTitle, setNewTitle] = useState("");
+    const [newLink, setNewLink] = useState("");
     const [newCategory, setNewCategory] = useState("");
     const [newGroupName, setNewGroupName] = useState("");
     const [newDiscountPercent, setNewDiscountPercent] = useState("");
     const [newUsesCount, setNewUsesCount] = useState("");
     const [newExpiresAt, setNewExpiresAt] = useState("");
+
+    const { metrics } = useCouponsMetricsWebSocket();
 
     const handleCopy = (code: string) => {
         toast({
@@ -260,6 +273,7 @@ const Coupons = () => {
     const resetNewCouponForm = () => {
         setNewCode("");
         setNewTitle("");
+        setNewLink("");
         setNewCategory("");
         setNewGroupName("");
         setNewDiscountPercent("");
@@ -287,6 +301,7 @@ const Coupons = () => {
                 group_id: toGroupId(newGroupName),
                 group_name: newGroupName,
                 discount_percent: discountPercent,
+                link: newLink,
             };
 
             if (
@@ -381,7 +396,7 @@ const Coupons = () => {
 
                                 <form
                                     onSubmit={handleCreateCoupon}
-                                    className="p-6 space-y-5"
+                                    className="p-6 space-y-3"
                                 >
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="space-y-2">
@@ -428,6 +443,19 @@ const Coupons = () => {
                                             }
                                             placeholder="Sony WH-1000XM5 Wireless Headphones"
                                             required
+                                            className="h-11"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="newLink">Link</Label>
+                                        <Input
+                                            id="newLink"
+                                            value={newLink}
+                                            onChange={(e) =>
+                                                setNewLink(e.target.value)
+                                            }
+                                            placeholder="https://example.com/deal"
                                             className="h-11"
                                         />
                                     </div>
@@ -538,7 +566,7 @@ const Coupons = () => {
                     </div>
 
                     {/* Stats Row */}
-                    <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                         <div
                             className="animate-slide-up opacity-0"
                             style={{
@@ -554,7 +582,7 @@ const Coupons = () => {
                                                 Total Coupons
                                             </p>
                                             <p className="text-3xl font-bold text-foreground mt-1">
-                                                156
+                                                {metrics.total_coupons}
                                             </p>
                                         </div>
                                         <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -579,7 +607,7 @@ const Coupons = () => {
                                                 Active
                                             </p>
                                             <p className="text-3xl font-bold text-foreground mt-1">
-                                                142
+                                                {metrics.active_coupons}
                                             </p>
                                         </div>
                                         <div className="h-12 w-12 rounded-xl bg-success/10 flex items-center justify-center">
@@ -589,7 +617,7 @@ const Coupons = () => {
                                 </CardContent>
                             </Card>
                         </div>
-                        <div
+                        {/* <div
                             className="animate-slide-up opacity-0"
                             style={{
                                 animationDelay: "200ms",
@@ -604,7 +632,7 @@ const Coupons = () => {
                                                 Total Uses
                                             </p>
                                             <p className="text-3xl font-bold text-foreground mt-1">
-                                                12.4K
+                                                {metrics.total_uses}
                                             </p>
                                         </div>
                                         <div className="h-12 w-12 rounded-xl bg-accent/10 flex items-center justify-center">
@@ -613,7 +641,7 @@ const Coupons = () => {
                                     </div>
                                 </CardContent>
                             </Card>
-                        </div>
+                        </div> */}
                         <div
                             className="animate-slide-up opacity-0"
                             style={{
@@ -629,7 +657,7 @@ const Coupons = () => {
                                                 Avg. Discount
                                             </p>
                                             <p className="text-3xl font-bold text-foreground mt-1">
-                                                27%
+                                                {metrics.avg_discount}%
                                             </p>
                                         </div>
                                         <div className="h-12 w-12 rounded-xl bg-warning/10 flex items-center justify-center">
