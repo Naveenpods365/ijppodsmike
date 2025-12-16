@@ -75,6 +75,7 @@ type Coupon = {
     product: string;
     category: string;
     retailer: string;
+    link: string;
     uses: number;
     expires: string;
     active: boolean;
@@ -112,6 +113,7 @@ const normalizeCoupon = (c: ApiCouponCard): Coupon => {
         product: c.title || "",
         category: c.category_name || c.category || "",
         retailer: c.group_name || "",
+        link: c.link || "",
         uses: (c.uses ??
             c.uses_count ??
             c.used_count ??
@@ -173,14 +175,14 @@ const CouponCard = ({
                             variant="ghost"
                             size="icon"
                             className="h-6 w-6 rounded-full hover:bg-muted group/btn"
-                            onClick={() => window.open("https://google.com", "_blank")}
+                            onClick={() => window.open(coupon.link, "_blank")}
                         >
                             <ExternalLink className="h-3.5 w-3.5 transition-transform duration-300 group-hover/btn:translate-x-0.5 text-muted-foreground" />
                         </Button>
                     </div>
                 </div>
 
-                <h3 className="font-semibold text-foreground mb-2 line-clamp-1">
+                <h3 className="font-semibold text-foreground mb-2 line-clamp-1 cursor-pointer" onClick={() => window.open(coupon.link, "_blank")}>
                     {coupon.product}
                 </h3>
 
