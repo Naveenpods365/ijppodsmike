@@ -84,7 +84,7 @@ const Index = () => {
                     </section>
 
                     {/* Chart & Affiliate Links */}
-                    <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <section className="grid grid-cols-1 gap-6">
                         <div
                             className="animate-scale-in opacity-0"
                             style={{
