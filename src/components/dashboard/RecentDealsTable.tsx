@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { ClipboardCopy, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/axiosInstance";
 import { useToast } from "@/hooks/use-toast";
@@ -14,7 +14,7 @@ interface Deal {
     shoppingPlatform: string;
     price: number | null;
     discounted: number | null;
-    coupons: string[];
+    createdAt: string | null;
     link: string | null;
     imageUrl: string | null;
     badge: string;
@@ -27,7 +27,6 @@ type ApiRecentDeal = {
     shopping_platform?: string | null;
     price?: number | null;
     discounted?: number | null;
-    coupons?: any[] | null;
     org_link?: string | null;
     orig_link?: string | null;
     aff_link?: string | null;
@@ -49,22 +48,18 @@ const formatMoney = (value: number | null | undefined) => {
     return `$${value.toFixed(2)}`;
 };
 
-const normalizeCoupons = (raw: any[] | null | undefined): string[] => {
-    if (!Array.isArray(raw)) return [];
-    return raw
-        .map((c) => {
-            if (typeof c === "string") return c;
-            if (c && typeof c === "object") {
-                return c.code || c.coupon_code || c.title || c.name || "";
-            }
-            return "";
-        })
-        .map((s) => String(s).trim())
-        .filter(Boolean);
+const formatDate = (value: string | null | undefined) => {
+    if (!value) return "—";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "—";
+    return d.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+    });
 };
 
 const normalizeRecentDeal = (d: ApiRecentDeal): Deal => {
-    const coupons = normalizeCoupons(d.coupons);
     const link = d.aff_link || d.org_link || d.orig_link || null;
 
     return {
@@ -73,7 +68,7 @@ const normalizeRecentDeal = (d: ApiRecentDeal): Deal => {
         shoppingPlatform: d.shopping_platform || "—",
         price: typeof d.price === "number" ? d.price : null,
         discounted: typeof d.discounted === "number" ? d.discounted : null,
-        coupons,
+        createdAt: d.created_at || null,
         link,
         imageUrl: d.image_url || null,
         badge: d.badge || "—",
@@ -87,22 +82,6 @@ export const RecentDealsTable = () => {
     const { toast } = useToast();
     const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("All");
     const [deals, setDeals] = useState<Deal[]>([]);
-
-    const handleCopy = async (value: string) => {
-        try {
-            await navigator.clipboard.writeText(value);
-            toast({
-                title: "Copied",
-                description: "Coupon code copied to clipboard.",
-            });
-        } catch (e: any) {
-            toast({
-                title: "Copy failed",
-                description: e?.message,
-                variant: "destructive",
-            });
-        }
-    };
 
     useEffect(() => {
         let mounted = true;
@@ -158,10 +137,10 @@ export const RecentDealsTable = () => {
                 <div className="flex items-center justify-between mb-5">
                     <div>
                         <h3 className="text-xl font-bold text-card-foreground">
-                            Recent Deals
+                            Scraped Deals
                         </h3>
                         <p className="text-sm text-muted-foreground mt-1">
-                            Track your deal distribution status
+                            Latest scraped deals from your sources
                         </p>
                     </div>
                     <Button
@@ -219,7 +198,7 @@ export const RecentDealsTable = () => {
                                 Discounted
                             </th>
                             <th className="text-left px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                                Coupons
+                                Date
                             </th>
                             <th className="text-left px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">
                                 Badge
@@ -287,30 +266,9 @@ export const RecentDealsTable = () => {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
-                                        {deal.coupons.length === 0 ? (
-                                            <span className="text-sm text-muted-foreground">
-                                                —
-                                            </span>
-                                        ) : (
-                                            <button
-                                                onClick={() =>
-                                                    handleCopy(deal.coupons[0])
-                                                }
-                                                className="flex items-center gap-2 group/copy hover:bg-muted px-2 py-1 rounded-lg transition-colors"
-                                                type="button"
-                                            >
-                                                <code className="text-xs font-mono text-muted-foreground bg-muted px-2 py-1 rounded">
-                                                    {deal.coupons[0]}
-                                                    {deal.coupons.length > 1
-                                                        ? ` +${
-                                                              deal.coupons
-                                                                  .length - 1
-                                                          }`
-                                                        : ""}
-                                                </code>
-                                                <ClipboardCopy className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover/copy:opacity-100 transition-opacity" />
-                                            </button>
-                                        )}
+                                        <span className="text-sm text-muted-foreground">
+                                            {formatDate(deal.createdAt)}
+                                        </span>
                                     </td>
                                     <td className="px-6 py-4">
                                         <Badge
