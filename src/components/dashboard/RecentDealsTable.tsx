@@ -10,19 +10,29 @@ type DealStatus = "Sent" | "Pending" | "Failed";
 
 interface Deal {
     id: string;
-    product: string;
-    retailer: string;
-    discount: string;
-    coupon: string;
+    title: string;
+    shoppingPlatform: string;
+    price: number | null;
+    discounted: number | null;
+    coupons: string[];
+    link: string | null;
+    imageUrl: string | null;
+    badge: string;
     status: DealStatus;
 }
 
 type ApiRecentDeal = {
     id: string;
-    product_name?: string | null;
-    group?: any;
-    discount_label?: string | null;
-    coupon_code?: string | null;
+    title?: string | null;
+    shopping_platform?: string | null;
+    price?: number | null;
+    discounted?: number | null;
+    coupons?: any[] | null;
+    org_link?: string | null;
+    orig_link?: string | null;
+    aff_link?: string | null;
+    image_url?: string | null;
+    badge?: string | null;
     status?: string | null;
     created_at?: string | null;
 };
@@ -34,18 +44,39 @@ const toDealStatus = (status?: string | null): DealStatus => {
     return "Pending";
 };
 
+const formatMoney = (value: number | null | undefined) => {
+    if (typeof value !== "number" || Number.isNaN(value)) return "—";
+    return `$${value.toFixed(2)}`;
+};
+
+const normalizeCoupons = (raw: any[] | null | undefined): string[] => {
+    if (!Array.isArray(raw)) return [];
+    return raw
+        .map((c) => {
+            if (typeof c === "string") return c;
+            if (c && typeof c === "object") {
+                return c.code || c.coupon_code || c.title || c.name || "";
+            }
+            return "";
+        })
+        .map((s) => String(s).trim())
+        .filter(Boolean);
+};
+
 const normalizeRecentDeal = (d: ApiRecentDeal): Deal => {
-    const retailer =
-        typeof d.group === "string"
-            ? d.group
-            : d.group?.name || d.group?.group_name || d.group?.title || "—";
+    const coupons = normalizeCoupons(d.coupons);
+    const link = d.aff_link || d.org_link || d.orig_link || null;
 
     return {
         id: String(d.id),
-        product: d.product_name || "—",
-        retailer,
-        discount: d.discount_label || "—",
-        coupon: d.coupon_code || "—",
+        title: d.title || "—",
+        shoppingPlatform: d.shopping_platform || "—",
+        price: typeof d.price === "number" ? d.price : null,
+        discounted: typeof d.discounted === "number" ? d.discounted : null,
+        coupons,
+        link,
+        imageUrl: d.image_url || null,
+        badge: d.badge || "—",
         status: toDealStatus(d.status),
     };
 };
@@ -56,6 +87,22 @@ export const RecentDealsTable = () => {
     const { toast } = useToast();
     const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("All");
     const [deals, setDeals] = useState<Deal[]>([]);
+
+    const handleCopy = async (value: string) => {
+        try {
+            await navigator.clipboard.writeText(value);
+            toast({
+                title: "Copied",
+                description: "Coupon code copied to clipboard.",
+            });
+        } catch (e: any) {
+            toast({
+                title: "Copy failed",
+                description: e?.message,
+                variant: "destructive",
+            });
+        }
+    };
 
     useEffect(() => {
         let mounted = true;
@@ -160,16 +207,25 @@ export const RecentDealsTable = () => {
                     <thead>
                         <tr className="border-b border-border bg-muted/30">
                             <th className="text-left px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                                Product
+                                Deal
                             </th>
                             <th className="text-left px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                                Retailer
+                                Platform
                             </th>
                             <th className="text-left px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                                Discount
+                                Price
                             </th>
                             <th className="text-left px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                                Coupon
+                                Discounted
+                            </th>
+                            <th className="text-left px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                Coupons
+                            </th>
+                            <th className="text-left px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                Badge
+                            </th>
+                            <th className="text-left px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                Link
                             </th>
                             <th className="text-left px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">
                                 Status
@@ -180,7 +236,7 @@ export const RecentDealsTable = () => {
                         {filteredDeals.length === 0 ? (
                             <tr>
                                 <td
-                                    colSpan={5}
+                                    colSpan={8}
                                     className="px-6 py-10 text-center text-sm text-muted-foreground"
                                 >
                                     No recent deals.
@@ -196,30 +252,93 @@ export const RecentDealsTable = () => {
                                     }}
                                 >
                                     <td className="px-6 py-4">
-                                        <span className="text-sm font-semibold text-card-foreground group-hover:text-primary transition-colors">
-                                            {deal.product}
-                                        </span>
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-10 w-10 rounded-lg bg-muted overflow-hidden border border-border/60 flex-shrink-0">
+                                                {deal.imageUrl ? (
+                                                    <img
+                                                        src={deal.imageUrl}
+                                                        alt={deal.title}
+                                                        className="h-full w-full object-cover"
+                                                        loading="lazy"
+                                                    />
+                                                ) : null}
+                                            </div>
+                                            <span className="text-sm font-semibold text-card-foreground group-hover:text-primary transition-colors line-clamp-2">
+                                                {deal.title}
+                                            </span>
+                                        </div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-2">
                                             <span className="w-2 h-2 rounded-full bg-success" />
                                             <span className="text-sm text-muted-foreground">
-                                                {deal.retailer}
+                                                {deal.shoppingPlatform}
                                             </span>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className="text-sm font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-lg">
-                                            {deal.discount}
+                                        <span className="text-sm font-semibold text-card-foreground">
+                                            {formatMoney(deal.price)}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <button className="flex items-center gap-2 group/copy hover:bg-muted px-2 py-1 rounded-lg transition-colors">
-                                            <code className="text-xs font-mono text-muted-foreground bg-muted px-2 py-1 rounded">
-                                                {deal.coupon}
-                                            </code>
-                                            <ClipboardCopy className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover/copy:opacity-100 transition-opacity" />
-                                        </button>
+                                        <span className="text-sm font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-lg">
+                                            {formatMoney(deal.discounted)}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {deal.coupons.length === 0 ? (
+                                            <span className="text-sm text-muted-foreground">
+                                                —
+                                            </span>
+                                        ) : (
+                                            <button
+                                                onClick={() =>
+                                                    handleCopy(deal.coupons[0])
+                                                }
+                                                className="flex items-center gap-2 group/copy hover:bg-muted px-2 py-1 rounded-lg transition-colors"
+                                                type="button"
+                                            >
+                                                <code className="text-xs font-mono text-muted-foreground bg-muted px-2 py-1 rounded">
+                                                    {deal.coupons[0]}
+                                                    {deal.coupons.length > 1
+                                                        ? ` +${
+                                                              deal.coupons
+                                                                  .length - 1
+                                                          }`
+                                                        : ""}
+                                                </code>
+                                                <ClipboardCopy className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover/copy:opacity-100 transition-opacity" />
+                                            </button>
+                                        )}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <Badge
+                                            variant="outline"
+                                            className="text-xs font-bold bg-accent/20 text-accent border-accent/30"
+                                        >
+                                            {deal.badge}
+                                        </Badge>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            className="gap-2 rounded-xl"
+                                            disabled={!deal.link}
+                                            onClick={() => {
+                                                if (!deal.link) return;
+                                                window.open(
+                                                    deal.link,
+                                                    "_blank",
+                                                    "noopener,noreferrer"
+                                                );
+                                            }}
+                                        >
+                                            <ExternalLink className="h-4 w-4" />
+                                            View
+                                        </Button>
                                     </td>
                                     <td className="px-6 py-4">
                                         <Badge
