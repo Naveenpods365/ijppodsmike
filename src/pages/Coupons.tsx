@@ -26,7 +26,7 @@ import {
     Percent,
     Plus,
     Search,
-    Ticket
+    Ticket,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -76,7 +76,6 @@ type Coupon = {
     category: string;
     retailer: string;
     link: string;
-    uses: number;
     expires: string;
     active: boolean;
 };
@@ -114,11 +113,6 @@ const normalizeCoupon = (c: ApiCouponCard): Coupon => {
         category: c.category_name || c.category || "",
         retailer: c.group_name || "",
         link: c.link || "",
-        uses: (c.uses ??
-            c.uses_count ??
-            c.used_count ??
-            c.usage_count ??
-            0) as number,
         expires: formatDate(expiresRaw),
         active: (c.active ??
             c.is_active ??
@@ -145,8 +139,9 @@ const CouponCard = ({
 
     return (
         <Card
-            className={`relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-all duration-300 group ${!coupon.active ? "opacity-60" : ""
-                }`}
+            className={`relative overflow-hidden border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-all duration-300 group ${
+                !coupon.active ? "opacity-60" : ""
+            }`}
         >
             <CardContent className="p-5">
                 <div className="flex items-start justify-between mb-4">
@@ -182,7 +177,10 @@ const CouponCard = ({
                     </div>
                 </div>
 
-                <h3 className="font-semibold text-foreground mb-2 line-clamp-1 cursor-pointer" onClick={() => window.open(coupon.link, "_blank")}>
+                <h3
+                    className="font-semibold text-foreground mb-2 line-clamp-1 cursor-pointer"
+                    onClick={() => window.open(coupon.link, "_blank")}
+                >
                     {coupon.product}
                 </h3>
 
@@ -197,7 +195,7 @@ const CouponCard = ({
 
                 <div className="flex items-center justify-between pt-3 border-t border-border/50">
                     <p className="text-xs text-muted-foreground">
-                        Used: {coupon.uses} times • Expires: {coupon.expires}
+                        Expires: {coupon.expires}
                     </p>
                     <Button
                         variant="ghost"
@@ -234,7 +232,6 @@ const Coupons = () => {
     const [newCategory, setNewCategory] = useState("");
     const [newGroupName, setNewGroupName] = useState("");
     const [newDiscountPercent, setNewDiscountPercent] = useState("");
-    const [newUsesCount, setNewUsesCount] = useState("");
     const [newExpiresAt, setNewExpiresAt] = useState("");
 
     const { metrics } = useCouponsMetricsWebSocket();
@@ -279,7 +276,6 @@ const Coupons = () => {
         setNewCategory("");
         setNewGroupName("");
         setNewDiscountPercent("");
-        setNewUsesCount("");
         setNewExpiresAt("");
     };
 
@@ -288,8 +284,6 @@ const Coupons = () => {
         try {
             setCreatingCoupon(true);
             const discountPercent = Number(newDiscountPercent);
-            const usesCountRaw =
-                newUsesCount.trim() === "" ? null : Number(newUsesCount);
 
             const expiresAtIso =
                 newExpiresAt.trim() === ""
@@ -305,13 +299,6 @@ const Coupons = () => {
                 discount_percent: discountPercent,
                 link: newLink,
             };
-
-            if (
-                typeof usesCountRaw === "number" &&
-                !Number.isNaN(usesCountRaw)
-            ) {
-                payload.uses_count = usesCountRaw;
-            }
             if (expiresAtIso) {
                 payload.expires_at = expiresAtIso;
             }
@@ -479,7 +466,7 @@ const Coupons = () => {
                                     </div>
 
                                     <div className="rounded-xl border border-border/60 bg-muted/30 p-4 space-y-4">
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 gap-4">
                                             <div className="space-y-2">
                                                 <Label htmlFor="newDiscountPercent">
                                                     Discount %
@@ -496,23 +483,6 @@ const Coupons = () => {
                                                     }
                                                     placeholder="35"
                                                     required
-                                                    className="h-11"
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="newUsesCount">
-                                                    Uses Count
-                                                </Label>
-                                                <Input
-                                                    id="newUsesCount"
-                                                    type="number"
-                                                    value={newUsesCount}
-                                                    onChange={(e) =>
-                                                        setNewUsesCount(
-                                                            e.target.value
-                                                        )
-                                                    }
-                                                    placeholder="234"
                                                     className="h-11"
                                                 />
                                             </div>

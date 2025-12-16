@@ -132,8 +132,8 @@ export const RecentDealsTable = () => {
     };
 
     return (
-        <div className="bg-card rounded-2xl shadow-card border border-border/50 overflow-hidden">
-            <div className="p-6 border-b border-border">
+        <div className="bg-card rounded-2xl shadow-card border border-border/50 overflow-hidden flex flex-col h-[650px]">
+            <div className="p-6 border-b border-border shrink-0">
                 <div className="flex items-center justify-between mb-5">
                     <div>
                         <h3 className="text-xl font-bold text-card-foreground">
@@ -181,32 +181,32 @@ export const RecentDealsTable = () => {
                 </div>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="flex-1 min-h-0 overflow-auto">
                 <table className="w-full">
                     <thead>
-                        <tr className="border-b border-border bg-muted/30">
-                            <th className="text-left px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                        <tr className="border-b border-border bg-muted/30 sticky top-0 z-10 bg-[#F8F9F8]">
+                            <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider w-[320px]">
                                 Deal
                             </th>
-                            <th className="text-left px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                            <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider w-[170px]">
                                 Platform
                             </th>
-                            <th className="text-left px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                            <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider w-[110px]">
                                 Price
                             </th>
-                            <th className="text-left px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                            <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider w-[130px]">
                                 Discounted
                             </th>
-                            <th className="text-left px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                            <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider w-[120px]">
                                 Date
                             </th>
-                            <th className="text-left px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                            <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider w-[130px]">
                                 Badge
                             </th>
-                            <th className="text-left px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                            <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider w-[110px] ">
                                 Link
                             </th>
-                            <th className="text-left px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                            <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider w-[120px]">
                                 Status
                             </th>
                         </tr>
@@ -216,7 +216,7 @@ export const RecentDealsTable = () => {
                             <tr>
                                 <td
                                     colSpan={8}
-                                    className="px-6 py-10 text-center text-sm text-muted-foreground"
+                                    className="px-4 py-10 text-center text-sm text-muted-foreground"
                                 >
                                     No recent deals.
                                 </td>
@@ -230,9 +230,9 @@ export const RecentDealsTable = () => {
                                         animationDelay: `${index * 50}ms`,
                                     }}
                                 >
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-3 max-w-[320px]">
                                         <div className="flex items-center gap-3">
-                                            <div className="h-10 w-10 rounded-lg bg-muted overflow-hidden border border-border/60 flex-shrink-0">
+                                            <div className="h-9 w-9 rounded-lg bg-muted overflow-hidden border border-border/60 flex-shrink-0">
                                                 {deal.imageUrl ? (
                                                     <img
                                                         src={deal.imageUrl}
@@ -242,12 +242,12 @@ export const RecentDealsTable = () => {
                                                     />
                                                 ) : null}
                                             </div>
-                                            <span className="text-sm font-semibold text-card-foreground group-hover:text-primary transition-colors line-clamp-2">
+                                            <span className="text-sm font-semibold text-card-foreground group-hover:text-primary transition-colors line-clamp-1">
                                                 {deal.title}
                                             </span>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-3">
                                         <div className="flex items-center gap-2">
                                             <span className="w-2 h-2 rounded-full bg-success" />
                                             <span className="text-sm text-muted-foreground">
@@ -255,22 +255,22 @@ export const RecentDealsTable = () => {
                                             </span>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-3">
                                         <span className="text-sm font-semibold text-card-foreground">
                                             {formatMoney(deal.price)}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-3">
                                         <span className="text-sm font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-lg">
                                             {formatMoney(deal.discounted)}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-3">
                                         <span className="text-sm text-muted-foreground">
                                             {formatDate(deal.createdAt)}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-3">
                                         <Badge
                                             variant="outline"
                                             className="text-xs font-bold bg-accent/20 text-accent border-accent/30"
@@ -278,7 +278,7 @@ export const RecentDealsTable = () => {
                                             {deal.badge}
                                         </Badge>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-3">
                                         <Button
                                             type="button"
                                             variant="outline"
@@ -298,7 +298,7 @@ export const RecentDealsTable = () => {
                                             View
                                         </Button>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-4 py-3">
                                         <Badge
                                             variant="outline"
                                             className={cn(
