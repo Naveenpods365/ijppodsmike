@@ -1,5 +1,13 @@
 import { type FormEvent, useMemo, useState } from "react";
-import { ExternalLink, Link2, Plus, Sparkles } from "lucide-react";
+import {
+    ExternalLink,
+    Link2,
+    MessageCircle,
+    Pencil,
+    Plus,
+    Send,
+    Sparkles,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +38,7 @@ export const AffiliateLinksSection = () => {
     const { toast } = useToast();
     const [open, setOpen] = useState(false);
     const [links, setLinks] = useState<AffiliateLink[]>([]);
+    const [editingId, setEditingId] = useState<string | null>(null);
 
     const [url, setUrl] = useState("");
     const [productTitle, setProductTitle] = useState("");
@@ -49,6 +58,64 @@ export const AffiliateLinksSection = () => {
         setSendToWhatsapp(true);
     };
 
+    const openCreate = () => {
+        setEditingId(null);
+        resetForm();
+        setOpen(true);
+    };
+
+    const openEdit = (l: AffiliateLink) => {
+        setEditingId(l.id);
+        setUrl(l.url);
+        setProductTitle(l.productTitle);
+        setRetailer(l.retailer);
+        setCategory(l.category);
+        setDiscountAmount(l.discountAmount);
+        setSendToTelegram(l.sendToTelegram);
+        setSendToWhatsapp(l.sendToWhatsapp);
+        setOpen(true);
+    };
+
+    const buildShareMessage = (l: AffiliateLink) => {
+        const parts: string[] = [];
+        if (l.productTitle) parts.push(l.productTitle);
+        if (l.discountAmount) parts.push(l.discountAmount);
+        if (l.retailer) parts.push(`Retailer: ${l.retailer}`);
+        if (l.category) parts.push(`Category: ${l.category}`);
+        if (l.url) parts.push(l.url);
+        return parts.join("\n");
+    };
+
+    const handleSendTelegram = (l: AffiliateLink) => {
+        if (!l.url) {
+            toast({
+                title: "Link is missing",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        const text = buildShareMessage(l);
+        const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(
+            l.url
+        )}&text=${encodeURIComponent(text)}`;
+        window.open(shareUrl, "_blank", "noopener,noreferrer");
+    };
+
+    const handleSendWhatsApp = (l: AffiliateLink) => {
+        if (!l.url) {
+            toast({
+                title: "Link is missing",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        const text = buildShareMessage(l);
+        const shareUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+        window.open(shareUrl, "_blank", "noopener,noreferrer");
+    };
+
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
         if (!url.trim()) {
@@ -59,8 +126,7 @@ export const AffiliateLinksSection = () => {
             return;
         }
 
-        const newItem: AffiliateLink = {
-            id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        const payload: Omit<AffiliateLink, "id"> = {
             url: url.trim(),
             productTitle: productTitle.trim(),
             retailer: retailer.trim(),
@@ -70,12 +136,30 @@ export const AffiliateLinksSection = () => {
             sendToWhatsapp,
         };
 
-        setLinks((prev) => [newItem, ...prev]);
-        toast({
-            title: "Affiliate link added",
-            description: "Your affiliate link has been saved.",
-        });
+        if (editingId) {
+            setLinks((prev) =>
+                prev.map((it) =>
+                    it.id === editingId ? { ...it, ...payload } : it
+                )
+            );
+            toast({
+                title: "Affiliate link updated",
+                description: "Your changes have been saved.",
+            });
+        } else {
+            const newItem: AffiliateLink = {
+                id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+                ...payload,
+            };
+            setLinks((prev) => [newItem, ...prev]);
+            toast({
+                title: "Affiliate link added",
+                description: "Your affiliate link has been saved.",
+            });
+        }
+
         setOpen(false);
+        setEditingId(null);
         resetForm();
     };
 
@@ -105,7 +189,7 @@ export const AffiliateLinksSection = () => {
                 <Button
                     className="h-12 gap-2 rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity shadow-lg shadow-primary/20 px-6"
                     type="button"
-                    onClick={() => setOpen(true)}
+                    onClick={openCreate}
                 >
                     <Plus className="h-4 w-4" />
                     Add New Affiliate Link
@@ -136,7 +220,7 @@ export const AffiliateLinksSection = () => {
                                     WhatsApp
                                 </th>
                                 <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                                    Link
+                                    Actions
                                 </th>
                             </tr>
                         </thead>
@@ -191,24 +275,62 @@ export const AffiliateLinksSection = () => {
                                         </Badge>
                                     </td>
                                     <td className="px-4 py-3">
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            className="gap-2 rounded-xl"
-                                            disabled={!l.url}
-                                            onClick={() => {
-                                                if (!l.url) return;
-                                                window.open(
-                                                    l.url,
-                                                    "_blank",
-                                                    "noopener,noreferrer"
-                                                );
-                                            }}
-                                        >
-                                            <ExternalLink className="h-4 w-4" />
-                                            View
-                                        </Button>
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="icon"
+                                                className="h-9 w-9 rounded-xl"
+                                                onClick={() => openEdit(l)}
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="icon"
+                                                className="h-9 w-9 rounded-xl"
+                                                disabled={
+                                                    !l.url || !l.sendToTelegram
+                                                }
+                                                onClick={() =>
+                                                    handleSendTelegram(l)
+                                                }
+                                            >
+                                                <Send className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="icon"
+                                                className="h-9 w-9 rounded-xl"
+                                                disabled={
+                                                    !l.url || !l.sendToWhatsapp
+                                                }
+                                                onClick={() =>
+                                                    handleSendWhatsApp(l)
+                                                }
+                                            >
+                                                <MessageCircle className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="icon"
+                                                className="h-9 w-9 rounded-xl"
+                                                disabled={!l.url}
+                                                onClick={() => {
+                                                    if (!l.url) return;
+                                                    window.open(
+                                                        l.url,
+                                                        "_blank",
+                                                        "noopener,noreferrer"
+                                                    );
+                                                }}
+                                            >
+                                                <ExternalLink className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
@@ -237,12 +359,25 @@ export const AffiliateLinksSection = () => {
                 </div>
             )}
 
-            <Dialog open={open} onOpenChange={setOpen}>
+            <Dialog
+                open={open}
+                onOpenChange={(next) => {
+                    setOpen(next);
+                    if (!next) {
+                        setEditingId(null);
+                        resetForm();
+                    }
+                }}
+            >
                 <DialogContent className="w-[92vw] max-w-[720px] p-0 overflow-hidden border-border/60 bg-card">
                     <div className="relative overflow-hidden border-b border-border/60 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/5">
                         <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top,rgba(0,0,0,0.12),transparent_55%)]" />
                         <DialogHeader className="p-6">
-                            <DialogTitle>Add New Affiliate Link</DialogTitle>
+                            <DialogTitle>
+                                {editingId
+                                    ? "Edit Affiliate Link"
+                                    : "Add New Affiliate Link"}
+                            </DialogTitle>
                             <DialogDescription>
                                 Fill in the details and optionally auto-share to
                                 your groups.
@@ -358,6 +493,7 @@ export const AffiliateLinksSection = () => {
                                 variant="outline"
                                 onClick={() => {
                                     setOpen(false);
+                                    setEditingId(null);
                                     resetForm();
                                 }}
                             >
@@ -367,7 +503,7 @@ export const AffiliateLinksSection = () => {
                                 type="submit"
                                 className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
                             >
-                                Save
+                                {editingId ? "Update" : "Save"}
                             </Button>
                         </DialogFooter>
                     </form>
