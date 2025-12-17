@@ -33,13 +33,12 @@ const AddSchedulerPopup = () => {
 
   // Form State
   const [jobId, setJobId] = useState("");
-  const [time, setTime] = useState(""); // hh:mm format
+  const [time, setTime] = useState(""); 
   const [selectedDays, setSelectedDays] = useState([]);
 
   const handleOpenChange = (open) => {
     dispatch(setIsOpenAddSchedulerPopup(open));
     if (!open) {
-      // Reset state on close
       setStep(1);
       setSelectedRetailer(null);
       resetForm();

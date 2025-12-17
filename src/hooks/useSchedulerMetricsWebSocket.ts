@@ -10,7 +10,6 @@ export type SchedulerMetrics = {
 
 type WebSocketMessage = {
     type: string;
-    // Flat structure as per user data
     scheduler_active: boolean;
     active_schedules: number;
     next_run_in_seconds: number;
@@ -61,7 +60,7 @@ export const useSchedulerMetricsWebSocket = () => {
             ws.onclose = () => {
                 console.log("Scheduler Overview WebSocket Disconnected");
                 setIsConnected(false);
-                // Simple reconnect logic after 5 seconds
+                //reconnect after 5 seconds
                 setTimeout(() => {
                     if (wsRef.current?.readyState === WebSocket.CLOSED) {
                         connect();

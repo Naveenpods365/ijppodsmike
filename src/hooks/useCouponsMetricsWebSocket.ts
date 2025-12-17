@@ -57,7 +57,7 @@ export const useCouponsMetricsWebSocket = () => {
             ws.onclose = () => {
                 console.log("Coupons Metrics WebSocket Disconnected");
                 setIsConnected(false);
-                // Simple reconnect logic after 5 seconds
+                // reconnect after 5 seconds
                 setTimeout(() => {
                     if (wsRef.current?.readyState === WebSocket.CLOSED) {
                         connect();

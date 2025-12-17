@@ -111,7 +111,6 @@ const Scheduler = () => {
 
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Decorative background elements */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-accent/5 rounded-full blur-3xl" />
@@ -285,7 +284,7 @@ const Scheduler = () => {
                             key={index}
                             className="border-border/50 animate-fade-in hover:bg-muted/50 cursor-pointer"
                             style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'forwards' }}
-                            onClick={() => handleRunClick(run.id || index)} // Use run.id if available, fallback to index for now if mock data doesn't have it
+                            onClick={() => handleRunClick(run.id || index)} 
                           >
                             <TableCell className="font-medium">{formatNextRunTime(run.finished_at)}</TableCell>
                             <TableCell>{run.deals_found}</TableCell>

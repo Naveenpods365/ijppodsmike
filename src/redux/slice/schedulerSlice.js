@@ -59,7 +59,7 @@ export const getRunDeals = createAsyncThunk(
   "scheduler/getRunDeals",
   async (runId, { rejectWithValue }) => {
     try {
-      // NOTE: Using placeholder endpoint as requested
+      //api end point will change
       const { data } = await api.get("/dashboard/recent-deals");
       return data;
     } catch (error) {
@@ -152,7 +152,7 @@ export const toggleSchedule = createAsyncThunk(
   async ({ id, is_active }, { rejectWithValue }) => {
     try {
       const { data } = await api.patch(`/schedule/${encodeURIComponent(id)}/toggle`, { is_active });
-      return { id, is_active }; // Return the updated status to update local state optimistically or confirmed
+      return { id, is_active }; 
     } catch (error) {
       console.error("Error toggling schedule:", error);
       return rejectWithValue(error.response?.data || "Unknown error");

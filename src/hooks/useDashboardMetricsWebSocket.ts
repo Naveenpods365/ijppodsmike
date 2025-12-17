@@ -50,7 +50,7 @@ export const useDashboardMetricsWebSocket = () => {
             ws.onclose = () => {
                 console.log("Dashboard Tiles WebSocket Disconnected");
                 setIsConnected(false);
-                // Simple reconnect logic after 5 seconds
+                // reconnect after 5 seconds
                 setTimeout(() => {
                     if (wsRef.current?.readyState === WebSocket.CLOSED) {
                         connect();
