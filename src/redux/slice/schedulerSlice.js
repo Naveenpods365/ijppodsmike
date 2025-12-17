@@ -20,7 +20,13 @@ const initialState = {
   // Recent Runs
   recentRuns: [],
   recentRunsLoading: false,
+  recentRuns: [],
+  recentRunsLoading: false,
   recentRunsError: null,
+  // Run Deals (Popup)
+  runDeals: [],
+  runDealsLoading: false,
+  runDealsError: null,
 };
 
 export const getScheduledJobs = createAsyncThunk(
@@ -44,6 +50,20 @@ export const getRecentRuns = createAsyncThunk(
       return data;
     } catch (error) {
        console.error("Error fetching recent runs:", error);
+      return rejectWithValue(error.response?.data || "Unknown error");
+    }
+  }
+);
+
+export const getRunDeals = createAsyncThunk(
+  "scheduler/getRunDeals",
+  async (runId, { rejectWithValue }) => {
+    try {
+      // NOTE: Using placeholder endpoint as requested
+      const { data } = await api.get("/dashboard/recent-deals");
+      return data;
+    } catch (error) {
+       console.error("Error fetching run deals:", error);
       return rejectWithValue(error.response?.data || "Unknown error");
     }
   }
@@ -178,6 +198,19 @@ const schedulerSlice = createSlice({
       .addCase(getRecentRuns.rejected, (state, { payload }) => {
         state.recentRunsLoading = false;
         state.recentRunsError = payload;
+      })
+      // Run Deals
+      .addCase(getRunDeals.pending, (state) => {
+        state.runDealsLoading = true;
+        state.runDealsError = null;
+      })
+      .addCase(getRunDeals.fulfilled, (state, { payload }) => {
+        state.runDealsLoading = false;
+        state.runDeals = payload;
+      })
+      .addCase(getRunDeals.rejected, (state, { payload }) => {
+        state.runDealsLoading = false;
+        state.runDealsError = payload;
       })
       // Costco Scrape
       .addCase(scrapeCostco.pending, (state) => {

@@ -59,6 +59,12 @@ const Scheduler = () => {
   const isLoading = scrapeCostcoLoading || scrapeBestBuyLoading || scrapeWalmartLoading;
 
   const [showDealsPopup, setShowDealsPopup] = useState(false);
+  const [selectedRunId, setSelectedRunId] = useState(null);
+
+  const handleRunClick = (runId) => {
+    setSelectedRunId(runId);
+    setShowDealsPopup(true);
+  };
 
   useEffect(() => {
     dispatch(getScheduledJobs());
@@ -279,7 +285,7 @@ const Scheduler = () => {
                             key={index}
                             className="border-border/50 animate-fade-in hover:bg-muted/50 cursor-pointer"
                             style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'forwards' }}
-                            onClick={() => setShowDealsPopup(true)}
+                            onClick={() => handleRunClick(run.id || index)} // Use run.id if available, fallback to index for now if mock data doesn't have it
                           >
                             <TableCell className="font-medium">{formatNextRunTime(run.finished_at)}</TableCell>
                             <TableCell>{run.deals_found}</TableCell>
@@ -314,7 +320,7 @@ const Scheduler = () => {
       <AddSchedulerPopup />
       <ScrapperSelectPopup />
       <AddSchedulerPopup />
-      <DealsPopup open={showDealsPopup} onOpenChange={setShowDealsPopup} />
+      <DealsPopup open={showDealsPopup} onOpenChange={setShowDealsPopup} runId={selectedRunId} />
       <ScrapingLoadingPopup open={isLoading} />
     </div>
   );

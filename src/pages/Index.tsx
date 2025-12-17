@@ -1,13 +1,15 @@
-import { Package, Tag, Users, Percent } from "lucide-react";
-import { Sidebar } from "@/components/dashboard/Sidebar";
+import { AffiliateLinksSection } from "@/components/dashboard/AffiliateLinksSection";
 import { Header } from "@/components/dashboard/Header";
+import { RecentDealsTable } from "@/components/dashboard/RecentDealsTable";
+import { Sidebar } from "@/components/dashboard/Sidebar";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { WeeklyActivityChart } from "@/components/dashboard/WeeklyActivityChart";
-import { TopCategoriesSection } from "@/components/dashboard/TopCategoriesSection";
-import { AffiliateLinksSection } from "@/components/dashboard/AffiliateLinksSection";
-import { RecentDealsTable } from "@/components/dashboard/RecentDealsTable";
+import { useDashboardMetricsWebSocket } from "@/hooks/useDashboardMetricsWebSocket";
+import { Package, Percent, Tag, Users } from "lucide-react";
 
 const Index = () => {
+    const { metrics } = useDashboardMetricsWebSocket();
+
     return (
         <div className="flex min-h-screen bg-background">
             {/* Decorative background elements */}
@@ -34,7 +36,7 @@ const Index = () => {
                         >
                             <StatsCard
                                 title="Total Deals"
-                                value="2,847"
+                                value={metrics ? metrics.total_deals.toLocaleString() : "—"}
                                 icon={Package}
                                 iconColor="bg-primary/10 text-primary"
                             />
@@ -48,7 +50,7 @@ const Index = () => {
                         >
                             <StatsCard
                                 title="Top Category"
-                                value="Electronics"
+                                value={metrics?.top_category?.name || "—"}
                                 icon={Tag}
                                 iconColor="bg-warning/10 text-warning"
                             />
@@ -62,7 +64,7 @@ const Index = () => {
                         >
                             <StatsCard
                                 title="Active Groups"
-                                value="8,234"
+                                value={metrics ? metrics.active_groups.toLocaleString() : "—"}
                                 icon={Users}
                                 iconColor="bg-success/10 text-success"
                             />
@@ -76,7 +78,7 @@ const Index = () => {
                         >
                             <StatsCard
                                 title="Avg. Discount"
-                                value="28.5%"
+                                value={metrics ? `${metrics.avg_discount_pct.toFixed(1)}%` : "—"}
                                 icon={Percent}
                                 iconColor="bg-info/10 text-info"
                             />
