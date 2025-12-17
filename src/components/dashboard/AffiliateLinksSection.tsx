@@ -1,4 +1,4 @@
-import { type FormEvent, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import {
     ExternalLink,
     Link2,
@@ -21,7 +21,21 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import api from "@/lib/axiosInstance";
+
+type ApiAffiliateLink = {
+    id: string;
+    url?: string | null;
+    title?: string | null;
+    retailer?: string | null;
+    category?: string | null;
+    discount_label?: string | null;
+    active?: boolean | null;
+    created_at?: string | null;
+    updated_at?: string | null;
+};
 
 type AffiliateLink = {
     id: string;
@@ -39,6 +53,8 @@ export const AffiliateLinksSection = () => {
     const [open, setOpen] = useState(false);
     const [links, setLinks] = useState<AffiliateLink[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [loadingLinks, setLoadingLinks] = useState(false);
+    const [saving, setSaving] = useState(false);
 
     const [url, setUrl] = useState("");
     const [productTitle, setProductTitle] = useState("");
@@ -116,7 +132,49 @@ export const AffiliateLinksSection = () => {
         window.open(shareUrl, "_blank", "noopener,noreferrer");
     };
 
-    const handleSubmit = (e: FormEvent) => {
+    useEffect(() => {
+        let mounted = true;
+
+        const loadAffiliateLinks = async () => {
+            try {
+                if (mounted) setLoadingLinks(true);
+                const res = await api.get("/affiliate");
+                const raw = (res.data || []) as unknown;
+                const arr: ApiAffiliateLink[] = Array.isArray(raw)
+                    ? (raw as ApiAffiliateLink[])
+                    : ((raw as any)?.data as ApiAffiliateLink[]) || [];
+
+                const normalized: AffiliateLink[] = arr.map((a) => ({
+                    id: String(a.id),
+                    url: a.url || "",
+                    productTitle: a.title || "",
+                    retailer: a.retailer || "",
+                    category: a.category || "",
+                    discountAmount: a.discount_label || "",
+                    sendToTelegram: true,
+                    sendToWhatsapp: true,
+                }));
+
+                if (mounted) setLinks(normalized);
+            } catch (e: any) {
+                if (mounted) setLinks([]);
+                toast({
+                    title: "Failed to load affiliate links",
+                    description: e?.response?.data?.message || e?.message,
+                    variant: "destructive",
+                });
+            } finally {
+                if (mounted) setLoadingLinks(false);
+            }
+        };
+
+        loadAffiliateLinks();
+        return () => {
+            mounted = false;
+        };
+    }, [toast]);
+
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         if (!url.trim()) {
             toast({
@@ -126,41 +184,106 @@ export const AffiliateLinksSection = () => {
             return;
         }
 
-        const payload: Omit<AffiliateLink, "id"> = {
+        const apiPayload = {
             url: url.trim(),
-            productTitle: productTitle.trim(),
+            title: productTitle.trim(),
             retailer: retailer.trim(),
             category: category.trim(),
-            discountAmount: discountAmount.trim(),
-            sendToTelegram,
-            sendToWhatsapp,
+            discount_label: discountAmount.trim(),
         };
 
         if (editingId) {
-            setLinks((prev) =>
-                prev.map((it) =>
-                    it.id === editingId ? { ...it, ...payload } : it
-                )
-            );
-            toast({
-                title: "Affiliate link updated",
-                description: "Your changes have been saved.",
-            });
-        } else {
-            const newItem: AffiliateLink = {
-                id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-                ...payload,
-            };
-            setLinks((prev) => [newItem, ...prev]);
+            try {
+                setSaving(true);
+                const res = await api.patch(
+                    `/affiliate/${editingId}`,
+                    apiPayload
+                );
+                const updated = (res.data || null) as ApiAffiliateLink | null;
+
+                const updatedItem: AffiliateLink = {
+                    id: String(updated?.id || editingId),
+                    url: updated?.url || apiPayload.url,
+                    productTitle: updated?.title || apiPayload.title,
+                    retailer: updated?.retailer || apiPayload.retailer,
+                    category: updated?.category || apiPayload.category,
+                    discountAmount:
+                        updated?.discount_label || apiPayload.discount_label,
+                    sendToTelegram,
+                    sendToWhatsapp,
+                };
+
+                setLinks((prev) =>
+                    prev.map((it) =>
+                        it.id === editingId ? { ...it, ...updatedItem } : it
+                    )
+                );
+
+                toast({
+                    title: "Affiliate link updated",
+                    description: "Your changes have been saved.",
+                });
+                setOpen(false);
+                setEditingId(null);
+                resetForm();
+            } catch (e: any) {
+                toast({
+                    title: "Failed to update affiliate link",
+                    description: e?.response?.data?.message || e?.message,
+                    variant: "destructive",
+                });
+            } finally {
+                setSaving(false);
+            }
+            return;
+        }
+
+        try {
+            setSaving(true);
+            const res = await api.post("/affiliate", apiPayload);
+            const created = (res.data || null) as ApiAffiliateLink | null;
+            if (created?.id) {
+                const newItem: AffiliateLink = {
+                    id: String(created.id),
+                    url: created.url || apiPayload.url,
+                    productTitle: created.title || apiPayload.title,
+                    retailer: created.retailer || apiPayload.retailer,
+                    category: created.category || apiPayload.category,
+                    discountAmount:
+                        created.discount_label || apiPayload.discount_label,
+                    sendToTelegram,
+                    sendToWhatsapp,
+                };
+                setLinks((prev) => [newItem, ...prev]);
+            } else {
+                const fallback: AffiliateLink = {
+                    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+                    url: apiPayload.url,
+                    productTitle: apiPayload.title,
+                    retailer: apiPayload.retailer,
+                    category: apiPayload.category,
+                    discountAmount: apiPayload.discount_label,
+                    sendToTelegram,
+                    sendToWhatsapp,
+                };
+                setLinks((prev) => [fallback, ...prev]);
+            }
+
             toast({
                 title: "Affiliate link added",
                 description: "Your affiliate link has been saved.",
             });
+            setOpen(false);
+            resetForm();
+        } catch (e: any) {
+            toast({
+                title: "Failed to add affiliate link",
+                description: e?.response?.data?.message || e?.message,
+                variant: "destructive",
+            });
+        } finally {
+            setSaving(false);
         }
-
-        setOpen(false);
-        setEditingId(null);
-        resetForm();
     };
 
     const hasLinks = useMemo(() => links.length > 0, [links.length]);
@@ -196,7 +319,69 @@ export const AffiliateLinksSection = () => {
                 </Button>
             </div>
 
-            {hasLinks ? (
+            {loadingLinks ? (
+                <div className="relative overflow-x-auto">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="border-b border-border bg-muted/30">
+                                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                    Product
+                                </th>
+                                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                    Retailer
+                                </th>
+                                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                    Category
+                                </th>
+                                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                    Discount
+                                </th>
+                                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                    Telegram
+                                </th>
+                                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                    WhatsApp
+                                </th>
+                                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                            {Array.from({ length: 4 }).map((_, idx) => (
+                                <tr key={`al-s-${idx}`}>
+                                    <td className="px-4 py-3">
+                                        <Skeleton className="h-4 w-[160px]" />
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <Skeleton className="h-4 w-[120px]" />
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <Skeleton className="h-4 w-[120px]" />
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <Skeleton className="h-6 w-[90px] rounded-lg" />
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <Skeleton className="h-6 w-[60px] rounded-full" />
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <Skeleton className="h-6 w-[60px] rounded-full" />
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <div className="flex items-center gap-2">
+                                            <Skeleton className="h-9 w-9 rounded-xl" />
+                                            <Skeleton className="h-9 w-9 rounded-xl" />
+                                            <Skeleton className="h-9 w-9 rounded-xl" />
+                                            <Skeleton className="h-9 w-9 rounded-xl" />
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            ) : hasLinks ? (
                 <div className="relative overflow-x-auto">
                     <table className="w-full">
                         <thead>
@@ -501,6 +686,7 @@ export const AffiliateLinksSection = () => {
                             </Button>
                             <Button
                                 type="submit"
+                                disabled={saving}
                                 className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
                             >
                                 {editingId ? "Update" : "Save"}
