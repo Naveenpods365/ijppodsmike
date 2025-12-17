@@ -180,8 +180,8 @@ export const RecentDealsTable = () => {
 
             <div className="flex-1 min-h-0 overflow-auto">
                 <table className="w-full">
-                    <thead>
-                        <tr className="border-b border-border bg-muted/30 sticky top-0 z-10 bg-[#F8F9F8]">
+                    <thead className="sticky top-0 z-10 bg-[#F8F9F8]">
+                        <tr className="border-b border-border ">
                             <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider w-[320px]">
                                 Deal
                             </th>
