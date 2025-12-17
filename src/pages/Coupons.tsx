@@ -247,7 +247,7 @@ const Coupons = () => {
     const loadCoupons = async () => {
         try {
             setLoadingCoupons(true);
-            const res = await api.get("/coupons/cards/");
+            const res = await api.get("/coupons/cards");
             const raw = (res.data || []) as ApiCouponCard[];
             const normalized = Array.isArray(raw)
                 ? raw.map(normalizeCoupon)

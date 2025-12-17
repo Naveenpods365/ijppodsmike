@@ -2,7 +2,8 @@ import axios, { AxiosRequestHeaders } from "axios";
 
 // HOTFIX: Force baseURL to 6060 to avoid env caching issues until server restart
 // TODO: revert to env-based after confirming connectivity and restarting dev server
-const baseURL: string = "http://124.123.18.19:6060/api";
+// const baseURL: string = "http://124.123.18.19:6060/api";
+const baseURL: string = " https://dealscraper.rohans.uno/api";
 // eslint-disable-next-line no-console
 console.warn("[axios] Using forced baseURL:", baseURL);
 
