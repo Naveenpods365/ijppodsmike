@@ -289,7 +289,7 @@ export const AffiliateLinksSection = () => {
     const hasLinks = useMemo(() => links.length > 0, [links.length]);
 
     return (
-        <div className="group relative bg-card rounded-2xl p-6 shadow-card border border-border/50 hover:border-primary/30 transition-all duration-500 overflow-hidden">
+        <div className="group relative bg-card rounded-2xl p-6 shadow-card border border-border/50 hover:border-primary/30 transition-all duration-500 overflow-hidden h-[560px] flex flex-col">
             {/* Background decoration */}
             <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             <div className="absolute bottom-0 right-0 w-40 h-40 bg-gradient-to-tl from-accent/10 to-transparent rounded-tl-full opacity-50" />
@@ -303,246 +303,253 @@ export const AffiliateLinksSection = () => {
                         Upload links and track performance
                     </p>
                 </div>
-                <div className="p-2 rounded-xl bg-accent/10">
+                {/* <div className="p-2 rounded-xl bg-accent/10">
                     <Link2 className="h-5 w-5 text-accent" />
+                </div> */}
+                <div className="relative flex justify-end mb-6">
+                    <Button
+                        className="h-12 gap-2 rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity shadow-lg shadow-primary/20 px-6"
+                        type="button"
+                        onClick={openCreate}
+                    >
+                        <Plus className="h-4 w-4" />
+                        Add New Affiliate Link
+                    </Button>
                 </div>
             </div>
 
-            <div className="relative flex justify-end mb-6">
-                <Button
-                    className="h-12 gap-2 rounded-xl bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity shadow-lg shadow-primary/20 px-6"
-                    type="button"
-                    onClick={openCreate}
-                >
-                    <Plus className="h-4 w-4" />
-                    Add New Affiliate Link
-                </Button>
-            </div>
+            <div className="relative flex-1 min-h-0">
+                {loadingLinks ? (
+                    <div className="relative h-full overflow-auto rounded-xl border border-border/60 bg-background/40">
+                        <table className="w-full">
+                            <thead className="sticky top-0 z-10 bg-[#F8F9F8]">
+                                <tr className="border-b border-border ">
+                                    <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                        Product
+                                    </th>
+                                    <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                        Retailer
+                                    </th>
+                                    <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                        Category
+                                    </th>
+                                    <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                        Discount
+                                    </th>
+                                    <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                        Telegram
+                                    </th>
+                                    <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                        WhatsApp
+                                    </th>
+                                    <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                                {Array.from({ length: 4 }).map((_, idx) => (
+                                    <tr key={`al-s-${idx}`}>
+                                        <td className="px-4 py-3">
+                                            <Skeleton className="h-4 w-[160px]" />
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <Skeleton className="h-4 w-[120px]" />
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <Skeleton className="h-4 w-[120px]" />
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <Skeleton className="h-6 w-[90px] rounded-lg" />
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <Skeleton className="h-6 w-[60px] rounded-full" />
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <Skeleton className="h-6 w-[60px] rounded-full" />
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-2">
+                                                <Skeleton className="h-9 w-9 rounded-xl" />
+                                                <Skeleton className="h-9 w-9 rounded-xl" />
+                                                <Skeleton className="h-9 w-9 rounded-xl" />
+                                                <Skeleton className="h-9 w-9 rounded-xl" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : hasLinks ? (
+                    <div className="relative h-full overflow-auto rounded-xl border border-border/60 bg-background/40">
+                        <table className="w-full">
+                            <thead className="sticky top-0 z-10 bg-[#F8F9F8]">
+                                <tr className="border-b border-border ">
+                                    <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                        Product
+                                    </th>
+                                    <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                        Retailer
+                                    </th>
+                                    <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                        Category
+                                    </th>
+                                    <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                        Discount
+                                    </th>
+                                    <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                        Telegram
+                                    </th>
+                                    <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                        WhatsApp
+                                    </th>
+                                    <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                                {links.map((l) => (
+                                    <tr
+                                        key={l.id}
+                                        className="hover:bg-muted/30 transition-colors"
+                                    >
+                                        <td className="px-4 py-3">
+                                            <span className="text-sm font-semibold text-card-foreground">
+                                                {l.productTitle || "—"}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <span className="text-sm text-muted-foreground">
+                                                {l.retailer || "—"}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <span className="text-sm text-muted-foreground">
+                                                {l.category || "—"}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <span className="text-sm font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-lg">
+                                                {l.discountAmount || "—"}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <Badge
+                                                variant="outline"
+                                                className={
+                                                    l.sendToTelegram
+                                                        ? "bg-success/10 text-success border-success/20"
+                                                        : "bg-muted text-muted-foreground"
+                                                }
+                                            >
+                                                {l.sendToTelegram
+                                                    ? "On"
+                                                    : "Off"}
+                                            </Badge>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <Badge
+                                                variant="outline"
+                                                className={
+                                                    l.sendToWhatsapp
+                                                        ? "bg-success/10 text-success border-success/20"
+                                                        : "bg-muted text-muted-foreground"
+                                                }
+                                            >
+                                                {l.sendToWhatsapp
+                                                    ? "On"
+                                                    : "Off"}
+                                            </Badge>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-2">
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="icon"
+                                                    className="h-9 w-9 rounded-xl"
+                                                    onClick={() => openEdit(l)}
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="icon"
+                                                    className="h-9 w-9 rounded-xl"
+                                                    disabled={
+                                                        !l.url ||
+                                                        !l.sendToTelegram
+                                                    }
+                                                    onClick={() =>
+                                                        handleSendTelegram(l)
+                                                    }
+                                                >
+                                                    <Send className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="icon"
+                                                    className="h-9 w-9 rounded-xl"
+                                                    disabled={
+                                                        !l.url ||
+                                                        !l.sendToWhatsapp
+                                                    }
+                                                    onClick={() =>
+                                                        handleSendWhatsApp(l)
+                                                    }
+                                                >
+                                                    <MessageCircle className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="icon"
+                                                    className="h-9 w-9 rounded-xl"
+                                                    disabled={!l.url}
+                                                    onClick={() => {
+                                                        if (!l.url) return;
+                                                        window.open(
+                                                            l.url,
+                                                            "_blank",
+                                                            "noopener,noreferrer"
+                                                        );
+                                                    }}
+                                                >
+                                                    <ExternalLink className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    <div className="relative h-full flex flex-col items-center justify-center text-center border-2 border-dashed border-border rounded-xl bg-muted/20 hover:border-primary/30 hover:bg-muted/30 transition-all duration-300 group/empty">
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 rounded-full blur-xl opacity-0 group-hover/empty:opacity-100 transition-opacity duration-500" />
+                            <div className="relative p-5 bg-gradient-to-br from-secondary to-muted rounded-2xl mb-4 group-hover/empty:scale-110 transition-transform duration-300">
+                                <Link2 className="h-8 w-8 text-muted-foreground" />
+                            </div>
+                        </div>
+                        <p className="text-sm font-medium text-muted-foreground">
+                            No affiliate links yet
+                        </p>
+                        <p className="text-xs text-muted-foreground/70 mt-1">
+                            Add a new affiliate link to get started!
+                        </p>
 
-            {loadingLinks ? (
-                <div className="relative overflow-x-auto">
-                    <table className="w-full">
-                        <thead>
-                            <tr className="border-b border-border bg-muted/30">
-                                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                                    Product
-                                </th>
-                                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                                    Retailer
-                                </th>
-                                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                                    Category
-                                </th>
-                                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                                    Discount
-                                </th>
-                                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                                    Telegram
-                                </th>
-                                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                                    WhatsApp
-                                </th>
-                                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
-                            {Array.from({ length: 4 }).map((_, idx) => (
-                                <tr key={`al-s-${idx}`}>
-                                    <td className="px-4 py-3">
-                                        <Skeleton className="h-4 w-[160px]" />
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <Skeleton className="h-4 w-[120px]" />
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <Skeleton className="h-4 w-[120px]" />
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <Skeleton className="h-6 w-[90px] rounded-lg" />
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <Skeleton className="h-6 w-[60px] rounded-full" />
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <Skeleton className="h-6 w-[60px] rounded-full" />
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <div className="flex items-center gap-2">
-                                            <Skeleton className="h-9 w-9 rounded-xl" />
-                                            <Skeleton className="h-9 w-9 rounded-xl" />
-                                            <Skeleton className="h-9 w-9 rounded-xl" />
-                                            <Skeleton className="h-9 w-9 rounded-xl" />
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            ) : hasLinks ? (
-                <div className="relative overflow-x-auto">
-                    <table className="w-full">
-                        <thead>
-                            <tr className="border-b border-border bg-muted/30">
-                                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                                    Product
-                                </th>
-                                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                                    Retailer
-                                </th>
-                                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                                    Category
-                                </th>
-                                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                                    Discount
-                                </th>
-                                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                                    Telegram
-                                </th>
-                                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                                    WhatsApp
-                                </th>
-                                <th className="text-left px-4 py-3 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
-                            {links.map((l) => (
-                                <tr
-                                    key={l.id}
-                                    className="hover:bg-muted/30 transition-colors"
-                                >
-                                    <td className="px-4 py-3">
-                                        <span className="text-sm font-semibold text-card-foreground">
-                                            {l.productTitle || "—"}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <span className="text-sm text-muted-foreground">
-                                            {l.retailer || "—"}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <span className="text-sm text-muted-foreground">
-                                            {l.category || "—"}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <span className="text-sm font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-lg">
-                                            {l.discountAmount || "—"}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <Badge
-                                            variant="outline"
-                                            className={
-                                                l.sendToTelegram
-                                                    ? "bg-success/10 text-success border-success/20"
-                                                    : "bg-muted text-muted-foreground"
-                                            }
-                                        >
-                                            {l.sendToTelegram ? "On" : "Off"}
-                                        </Badge>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <Badge
-                                            variant="outline"
-                                            className={
-                                                l.sendToWhatsapp
-                                                    ? "bg-success/10 text-success border-success/20"
-                                                    : "bg-muted text-muted-foreground"
-                                            }
-                                        >
-                                            {l.sendToWhatsapp ? "On" : "Off"}
-                                        </Badge>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <div className="flex items-center gap-2">
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="icon"
-                                                className="h-9 w-9 rounded-xl"
-                                                onClick={() => openEdit(l)}
-                                            >
-                                                <Pencil className="h-4 w-4" />
-                                            </Button>
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="icon"
-                                                className="h-9 w-9 rounded-xl"
-                                                disabled={
-                                                    !l.url || !l.sendToTelegram
-                                                }
-                                                onClick={() =>
-                                                    handleSendTelegram(l)
-                                                }
-                                            >
-                                                <Send className="h-4 w-4" />
-                                            </Button>
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="icon"
-                                                className="h-9 w-9 rounded-xl"
-                                                disabled={
-                                                    !l.url || !l.sendToWhatsapp
-                                                }
-                                                onClick={() =>
-                                                    handleSendWhatsApp(l)
-                                                }
-                                            >
-                                                <MessageCircle className="h-4 w-4" />
-                                            </Button>
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="icon"
-                                                className="h-9 w-9 rounded-xl"
-                                                disabled={!l.url}
-                                                onClick={() => {
-                                                    if (!l.url) return;
-                                                    window.open(
-                                                        l.url,
-                                                        "_blank",
-                                                        "noopener,noreferrer"
-                                                    );
-                                                }}
-                                            >
-                                                <ExternalLink className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            ) : (
-                <div className="relative flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-border rounded-xl bg-muted/20 hover:border-primary/30 hover:bg-muted/30 transition-all duration-300 group/empty">
-                    <div className="relative">
-                        <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 rounded-full blur-xl opacity-0 group-hover/empty:opacity-100 transition-opacity duration-500" />
-                        <div className="relative p-5 bg-gradient-to-br from-secondary to-muted rounded-2xl mb-4 group-hover/empty:scale-110 transition-transform duration-300">
-                            <Link2 className="h-8 w-8 text-muted-foreground" />
+                        <div className="flex items-center gap-2 mt-4 px-3 py-1.5 rounded-full bg-accent/10 text-accent text-xs font-medium">
+                            <Sparkles className="h-3 w-3" />
+                            <span>Earn up to 15% commission</span>
                         </div>
                     </div>
-                    <p className="text-sm font-medium text-muted-foreground">
-                        No affiliate links yet
-                    </p>
-                    <p className="text-xs text-muted-foreground/70 mt-1">
-                        Add a new affiliate link to get started!
-                    </p>
-
-                    <div className="flex items-center gap-2 mt-4 px-3 py-1.5 rounded-full bg-accent/10 text-accent text-xs font-medium">
-                        <Sparkles className="h-3 w-3" />
-                        <span>Earn up to 15% commission</span>
-                    </div>
-                </div>
-            )}
+                )}
+            </div>
 
             <Dialog
                 open={open}
