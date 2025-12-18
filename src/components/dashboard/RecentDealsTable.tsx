@@ -90,6 +90,19 @@ export const RecentDealsTable = () => {
 
         const loadRecentDeals = async () => {
             try {
+                const token =
+                    localStorage.getItem("auth:token") ||
+                    sessionStorage.getItem("auth:token");
+                if (!token) {
+                    if (mounted) setDeals([]);
+                    toast({
+                        title: "Not authenticated",
+                        description:
+                            "Please log in again to load recent deals.",
+                        variant: "destructive",
+                    });
+                    return;
+                }
                 if (mounted) setLoadingDeals(true);
                 const res = await api.get("/dashboard/recent-deals");
                 const raw = (res.data || []) as ApiRecentDeal[];
@@ -99,9 +112,20 @@ export const RecentDealsTable = () => {
                 if (mounted) setDeals(normalized);
             } catch (e: any) {
                 if (mounted) setDeals([]);
+                const status = e?.response?.status;
+                const backendMsg =
+                    e?.response?.data?.message ||
+                    e?.response?.data?.detail ||
+                    (typeof e?.response?.data === "string"
+                        ? e.response.data
+                        : null);
                 toast({
                     title: "Failed to load recent deals",
-                    description: e?.response?.data?.message || e?.message,
+                    description:
+                        backendMsg ||
+                        (status
+                            ? `Request failed with status ${status}`
+                            : e?.message),
                     variant: "destructive",
                 });
             } finally {
