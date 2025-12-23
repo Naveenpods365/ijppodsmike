@@ -297,7 +297,7 @@ const Settings = () => {
     };
 
     return (
-        <div className="flex min-h-screen bg-background">
+        <div className="flex h-screen bg-background overflow-hidden">
             {/* Decorative background elements */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden">
                 <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
@@ -306,17 +306,17 @@ const Settings = () => {
 
             <Sidebar />
 
-            <div className="flex-1 flex flex-col min-h-screen relative">
+            <div className="flex-1 flex flex-col h-screen relative overflow-hidden">
                 <Header
                     title="Settings"
                     subtitle="Manage your account and preferences"
                 />
 
-                <main className="flex-1 p-8 overflow-y-auto scroll-smooth">
+                <main className="flex-1 min-h-0 p-8 overflow-y-auto scroll-smooth">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                         {/* Sticky left navigation */}
                         <aside className="lg:col-span-3">
-                            <div className="sticky">
+                            <div className="sticky top-0 max-h-[calc(100vh-8rem)] overflow-auto">
                                 <nav className="rounded-xl border border-border/60 bg-card/60 backdrop-blur p-2 shadow-sm">
                                     {[
                                         {

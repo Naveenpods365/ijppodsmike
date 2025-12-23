@@ -32,15 +32,26 @@ const formatMoney = (value: number | null | undefined) => {
 const normalizeDeal = (d: any) => {
     const link = d.aff_link || d.org_link || d.orig_link || null;
     return {
-        id: String(d.id),
-        title: d.title || "—",
+        id: String(d.id || d._id || d.deal_id || ""),
+        title: d.preview_message || d.title || "—",
         shoppingPlatform: d.shopping_platform || "—",
         price: typeof d.price === "number" ? d.price : null,
         discounted: typeof d.discounted === "number" ? d.discounted : null,
         link,
         imageUrl: d.image_url || null,
-        date: d.created_at ? new Date(d.created_at).toLocaleDateString(undefined, { month: 'short', day: '2-digit', year: 'numeric' }) : "—",
-        time: d.created_at ? new Date(d.created_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : "—",
+        date: d.created_at
+            ? new Date(d.created_at).toLocaleDateString(undefined, {
+                  month: "short",
+                  day: "2-digit",
+                  year: "numeric",
+              })
+            : "—",
+        time: d.created_at
+            ? new Date(d.created_at).toLocaleTimeString(undefined, {
+                  hour: "2-digit",
+                  minute: "2-digit",
+              })
+            : "—",
         status: d.status || "Pending",
     };
 };
@@ -53,7 +64,32 @@ interface DealsPopupProps {
 
 const DealsPopup = ({ open, onOpenChange, runId }: DealsPopupProps) => {
     const dispatch = useDispatch();
-    const { runDeals, runDealsLoading } = useSelector((state: any) => state.scheduler);
+    const { runDeals, runDealsLoading, runDealsError, runDetails } =
+        useSelector((state: any) => state.scheduler);
+
+    const jobDisplay = (() => {
+        if (!runDetails) return "—";
+        if (runDetails.shopping_platform)
+            return String(runDetails.shopping_platform);
+        const raw = runDetails.job_name || runDetails.job_id;
+        if (!raw) return "—";
+        const text = String(raw);
+        const parts = text
+            .split(/[_\-\s]+/)
+            .filter(Boolean)
+            .filter(
+                (p) =>
+                    ![
+                        "manual",
+                        "scheduled",
+                        "schedule",
+                        "scrape",
+                        "scraper",
+                        "job",
+                    ].includes(p.toLowerCase())
+            );
+        return parts.length ? parts.join("_") : text;
+    })();
 
     useEffect(() => {
         if (open && runId) {
@@ -76,14 +112,71 @@ const DealsPopup = ({ open, onOpenChange, runId }: DealsPopupProps) => {
                 <div className="relative overflow-hidden border-b border-border/60 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/5 shrink-0">
                     <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_top,rgba(0,0,0,0.12),transparent_55%)]" />
                     <DialogHeader className="p-6">
-                        <DialogTitle>Recent Run Deals</DialogTitle>
+                        <DialogTitle>
+                            Recent Run Deals{runId ? `: ${runId}` : ""}
+                        </DialogTitle>
                     </DialogHeader>
+                    {runDetails && (
+                        <div className="px-6 pb-6 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                            <div className="rounded-lg border border-border/60 bg-background/40 p-3">
+                                <div className="text-xs text-muted-foreground">
+                                 Platform
+                                </div>
+                                <div
+                                    className="font-medium truncate"
+                                    title={jobDisplay}
+                                >
+                                    {jobDisplay}
+                                </div>
+                            </div>
+                            <div className="rounded-lg border border-border/60 bg-background/40 p-3">
+                                <div className="text-xs text-muted-foreground">
+                                    Status
+                                </div>
+                                <div className="font-medium capitalize">
+                                    {runDetails.status || "—"}
+                                </div>
+                            </div>
+                            <div className="rounded-lg border border-border/60 bg-background/40 p-3">
+                                <div className="text-xs text-muted-foreground">
+                                    Started
+                                </div>
+                                <div className="font-medium">
+                                    {runDetails.started_at
+                                        ? new Date(
+                                              runDetails.started_at
+                                          ).toLocaleString()
+                                        : "—"}
+                                </div>
+                            </div>
+                            <div className="rounded-lg border border-border/60 bg-background/40 p-3">
+                                <div className="text-xs text-muted-foreground">
+                                    Finished
+                                </div>
+                                <div className="font-medium">
+                                    {runDetails.finished_at
+                                        ? new Date(
+                                              runDetails.finished_at
+                                          ).toLocaleString()
+                                        : "—"}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex-1 overflow-auto custom-scrollbar">
                     {runDealsLoading ? (
                         <div className="flex justify-center items-center h-48">
                             <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        </div>
+                    ) : runDealsError ? (
+                        <div className="text-center py-12 text-muted-foreground">
+                            Failed to load run data.
+                        </div>
+                    ) : !runId ? (
+                        <div className="text-center py-12 text-muted-foreground">
+                            No run selected.
                         </div>
                     ) : deals.length === 0 ? (
                         <div className="text-center py-12 text-muted-foreground">
@@ -129,12 +222,17 @@ const DealsPopup = ({ open, onOpenChange, runId }: DealsPopupProps) => {
                                                     />
                                                 ) : (
                                                     <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center border border-border">
-                                                        <span className="text-xs text-muted-foreground">No Img</span>
+                                                        <span className="text-xs text-muted-foreground">
+                                                            No Img
+                                                        </span>
                                                     </div>
                                                 )}
                                                 <div className="min-w-0">
                                                     <div className="flex items-center gap-2">
-                                                        <p className="font-medium text-foreground truncate max-w-[200px]" title={deal.title}>
+                                                        <p
+                                                            className="font-medium text-foreground truncate max-w-[200px]"
+                                                            title={deal.title}
+                                                        >
                                                             {deal.title}
                                                         </p>
                                                         {deal.link && (
@@ -152,7 +250,10 @@ const DealsPopup = ({ open, onOpenChange, runId }: DealsPopupProps) => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <Badge variant="outline" className="capitalize">
+                                            <Badge
+                                                variant="outline"
+                                                className="capitalize"
+                                            >
                                                 {deal.shoppingPlatform}
                                             </Badge>
                                         </td>
@@ -161,15 +262,21 @@ const DealsPopup = ({ open, onOpenChange, runId }: DealsPopupProps) => {
                                                 {deal.discounted ? (
                                                     <>
                                                         <span className="text-sm font-medium text-success block">
-                                                            {formatMoney(deal.discounted)}
+                                                            {formatMoney(
+                                                                deal.discounted
+                                                            )}
                                                         </span>
                                                         <span className="text-xs text-muted-foreground line-through block">
-                                                            {formatMoney(deal.price)}
+                                                            {formatMoney(
+                                                                deal.price
+                                                            )}
                                                         </span>
                                                     </>
                                                 ) : (
                                                     <span className="text-sm font-medium text-foreground">
-                                                        {formatMoney(deal.price)}
+                                                        {formatMoney(
+                                                            deal.price
+                                                        )}
                                                     </span>
                                                 )}
                                             </div>
@@ -187,7 +294,10 @@ const DealsPopup = ({ open, onOpenChange, runId }: DealsPopupProps) => {
                                         <td className="px-6 py-4">
                                             <Badge
                                                 variant="outline"
-                                                className={cn("capitalize", getStatusStyles(deal.status))}
+                                                className={cn(
+                                                    "capitalize",
+                                                    getStatusStyles(deal.status)
+                                                )}
                                             >
                                                 {deal.status}
                                             </Badge>
