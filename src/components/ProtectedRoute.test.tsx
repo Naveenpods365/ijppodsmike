@@ -54,15 +54,12 @@ describe("ProtectedRoute", () => {
             logout: vi.fn(),
         });
 
-        // Act
         renderRoutes("/private");
 
-        // Assert
         expect(screen.getByText(/loading\.\.\./i)).toBeInTheDocument();
     });
 
     it("redirects unauthenticated users to /login and preserves the 'from' location", async () => {
-        // Arrange
         vi.mocked(useAuth).mockReturnValue({
             user: null,
             loading: false,
@@ -70,10 +67,8 @@ describe("ProtectedRoute", () => {
             logout: vi.fn(),
         });
 
-        // Act
         renderRoutes("/private");
 
-        // Assert
         expect(
             await screen.findByRole("heading", { name: /login page/i })
         ).toBeInTheDocument();
