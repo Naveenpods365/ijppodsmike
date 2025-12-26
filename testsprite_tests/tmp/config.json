@@ -1,0 +1,15 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:8081",
+  "executionArgs": {
+    "projectName": "ijpdealscraper",
+    "projectPath": "/Users/naveen/Documents/ijpdealscraper",
+    "testIds": [],
+    "additionalInstruction": "",
+    "envs": {
+      "API_KEY": "sk-user-WktHL6Lj9C9RCKjYANIcKVxHsnnA6-cy_yKvv1CHQJyjAXfrM-xad4jmtFoKZLYh6qE8WpgCU6AiqO5fzH0XE68a7ivQGH_oSFXrSIaecoyIPkRIdri6xJE7H0NqMFLroFs"
+    }
+  }
+}
