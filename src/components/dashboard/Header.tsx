@@ -208,6 +208,7 @@ export const Header = ({
                                     variant="ghost"
                                     size="icon"
                                     className="h-11 w-11 rounded-xl bg-gradient-to-br from-secondary to-muted overflow-hidden group"
+                                    aria-label="User menu"
                                 >
                                     <User className="h-5 w-5 text-secondary-foreground group-hover:scale-110 transition-transform" />
                                 </Button>

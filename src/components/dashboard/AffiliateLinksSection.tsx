@@ -479,10 +479,7 @@ export const AffiliateLinksSection = () => {
                                                     variant="outline"
                                                     size="icon"
                                                     className="h-9 w-9 rounded-xl"
-                                                    disabled={
-                                                        !l.url ||
-                                                        !l.sendToTelegram
-                                                    }
+                                                    disabled={!l.sendToTelegram}
                                                     onClick={() =>
                                                         handleSendTelegram(l)
                                                     }
@@ -494,10 +491,7 @@ export const AffiliateLinksSection = () => {
                                                     variant="outline"
                                                     size="icon"
                                                     className="h-9 w-9 rounded-xl"
-                                                    disabled={
-                                                        !l.url ||
-                                                        !l.sendToWhatsapp
-                                                    }
+                                                    disabled={!l.sendToWhatsapp}
                                                     onClick={() =>
                                                         handleSendWhatsApp(l)
                                                     }
