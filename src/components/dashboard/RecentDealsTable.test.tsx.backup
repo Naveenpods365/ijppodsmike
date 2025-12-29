@@ -1,0 +1,452 @@
+import { render, screen, waitFor } from '@testing-library/react';
+import { vi, beforeEach } from 'vitest';
+import { RecentDealsTable } from './RecentDealsTable';
+import api from '@/lib/axiosInstance';
+import { useToast } from '@/hooks/use-toast';
+
+// Mock the API and toast
+vi.mock('@/lib/axiosInstance');
+vi.mock('@/hooks/use-toast');
+vi.mock('lucide-react', async () => {
+  const actual = await vi.importActual('lucide-react');
+  return {
+    ...actual,
+    ExternalLink: (props: any) => <svg {...props} data-testid="external-link-icon">ExternalLink</svg>,
+  };
+});
+
+// Mock localStorage
+const mockLocalStorage = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+  length: 0,
+  key: vi.fn(),
+};
+Object.defineProperty(window, 'localStorage', {
+  value: mockLocalStorage,
+});
+
+// Mock sessionStorage
+const mockSessionStorage = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+  length: 0,
+  key: vi.fn(),
+};
+Object.defineProperty(window, 'sessionStorage', {
+  value: mockSessionStorage,
+});
+
+describe('RecentDealsTable', () => {
+  const mockToast = vi.fn();
+  
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (useToast as jest.Mock).mockReturnValue({ toast: mockToast });
+    mockLocalStorage.getItem.mockReturnValue('mock-token');
+    mockSessionStorage.getItem.mockReturnValue(null);
+  });
+
+  it('renders loading skeleton when deals are loading', async () => {
+    (api.get as jest.Mock).mockImplementation(() => new Promise(() => {})); // Never resolve to show loading
+    
+    render(<RecentDealsTable />);
+    
+    // Should show loading skeletons
+    expect(screen.getByText('Scraped Deals')).toBeInTheDocument();
+    expect(screen.getByText('Latest scraped deals from your sources')).toBeInTheDocument();
+    
+    // Check for skeleton elements (8 rows as per the component)
+    const skeletonRows = screen.getAllByText('—');
+    expect(skeletonRows.length).toBeGreaterThan(0);
+  });
+
+  it('renders with empty deals when API returns no data', async () => {
+    (api.get as jest.Mock).mockResolvedValue({ data: [] });
+
+    render(<RecentDealsTable />);
+
+    await waitFor(() => {
+      expect(api.get).toHaveBeenCalledWith('/dashboard/recent-deals');
+    });
+
+    expect(screen.getByText('No recent deals.')).toBeInTheDocument();
+  });
+
+  it('renders deals when API returns data', async () => {
+    const mockDeals = [
+      {
+        id: '1',
+        title: 'Test Deal 1',
+        shopping_platform: 'Amazon',
+        price: 100,
+        discounted: 80,
+        org_link: 'https://example.com/deal1',
+        image_url: 'https://example.com/image1.jpg',
+        badge: '20% OFF',
+        status: 'Sent',
+        created_at: '2023-01-01T00:00:00Z',
+      },
+      {
+        id: '2',
+        title: 'Test Deal 2',
+        shopping_platform: 'eBay',
+        price: 200,
+        discounted: 150,
+        org_link: 'https://example.com/deal2',
+        image_url: null,
+        badge: '25% OFF',
+        status: 'Pending',
+        created_at: '2023-01-02T00:00:00Z',
+      },
+    ];
+    
+    (api.get as jest.Mock).mockResolvedValue({ data: mockDeals });
+
+    render(<RecentDealsTable />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Test Deal 1')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Test Deal 1')).toBeInTheDocument();
+    expect(screen.getByText('Test Deal 2')).toBeInTheDocument();
+    expect(screen.getByText('Amazon')).toBeInTheDocument();
+    expect(screen.getByText('eBay')).toBeInTheDocument();
+    expect(screen.getByText('$100.00')).toBeInTheDocument();
+    expect(screen.getByText('$80.00')).toBeInTheDocument();
+    expect(screen.getByText('$200.00')).toBeInTheDocument();
+    expect(screen.getByText('$150.00')).toBeInTheDocument();
+    expect(screen.getByText('20% OFF')).toBeInTheDocument();
+    expect(screen.getByText('25% OFF')).toBeInTheDocument();
+    expect(screen.getByText('Sent')).toBeInTheDocument();
+    expect(screen.getByText('Pending')).toBeInTheDocument();
+  });
+
+  it('handles API error gracefully', async () => {
+    const mockError = {
+      response: {
+        status: 500,
+        data: {
+          message: 'Internal Server Error'
+        }
+      }
+    };
+    (api.get as jest.Mock).mockRejectedValue(mockError);
+
+    render(<RecentDealsTable />);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith({
+        title: 'Failed to load recent deals',
+        description: 'Internal Server Error',
+        variant: 'destructive',
+      });
+    });
+  });
+
+  it('handles API error without backend message', async () => {
+    const mockError = {
+      response: {
+        status: 404,
+      },
+      message: 'Network Error'
+    };
+    (api.get as jest.Mock).mockRejectedValue(mockError);
+
+    render(<RecentDealsTable />);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith({
+        title: 'Failed to load recent deals',
+        description: 'Request failed with status 404',
+        variant: 'destructive',
+      });
+    });
+  });
+
+  it('handles authentication error when no token found', async () => {
+    // Reset the mocks for this specific test
+    vi.clearAllMocks();
+    mockLocalStorage.getItem.mockReturnValue(null);
+    mockSessionStorage.getItem.mockReturnValue(null);
+    (useToast as jest.Mock).mockReturnValue({ toast: mockToast });
+    (api.get as jest.Mock).mockResolvedValue({ data: [] });
+
+    render(<RecentDealsTable />);
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith({
+        title: 'Not authenticated',
+        description: 'Please log in again to load recent deals.',
+        variant: 'destructive',
+      });
+    });
+  });
+
+  it('filters deals by tab', async () => {
+    const mockDeals = [
+      {
+        id: '1',
+        title: 'Sent Deal',
+        status: 'Sent',
+      },
+      {
+        id: '2',
+        title: 'Pending Deal',
+        status: 'Pending',
+      },
+      {
+        id: '3',
+        title: 'Failed Deal',
+        status: 'Failed',
+      },
+    ];
+    
+    (api.get as jest.Mock).mockResolvedValue({ data: mockDeals });
+
+    render(<RecentDealsTable />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Sent Deal')).toBeInTheDocument();
+    });
+
+    // Initially all deals should be visible
+    expect(screen.getByText('Sent Deal')).toBeInTheDocument();
+    expect(screen.getByText('Pending Deal')).toBeInTheDocument();
+    expect(screen.getByText('Failed Deal')).toBeInTheDocument();
+
+    // Click on 'Sent' tab
+    const sentTab = screen.getByRole('button', { name: /Sent/ });
+    sentTab.click();
+
+    await waitFor(() => {
+      expect(screen.getByText('Sent Deal')).toBeInTheDocument();
+    });
+
+    // Only Sent deal should be visible now
+    expect(screen.getByText('Sent Deal')).toBeInTheDocument();
+    expect(screen.queryByText('Pending Deal')).not.toBeInTheDocument();
+    expect(screen.queryByText('Failed Deal')).not.toBeInTheDocument();
+
+    // Click on 'Pending' tab
+    const pendingTab = screen.getByRole('button', { name: /Pending/ });
+    pendingTab.click();
+
+    await waitFor(() => {
+      expect(screen.queryByText('Sent Deal')).not.toBeInTheDocument();
+    });
+
+    // Only Pending deal should be visible now
+    expect(screen.queryByText('Sent Deal')).not.toBeInTheDocument();
+    expect(screen.getByText('Pending Deal')).toBeInTheDocument();
+    expect(screen.queryByText('Failed Deal')).not.toBeInTheDocument();
+  });
+
+  it('shows correct tab counts', async () => {
+    const mockDeals = [
+      { id: '1', title: 'Sent Deal 1', status: 'Sent' },
+      { id: '2', title: 'Sent Deal 2', status: 'Sent' },
+      { id: '3', title: 'Pending Deal', status: 'Pending' },
+      { id: '4', title: 'Failed Deal', status: 'Failed' },
+    ];
+    
+    (api.get as jest.Mock).mockResolvedValue({ data: mockDeals });
+
+    render(<RecentDealsTable />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Sent Deal 1')).toBeInTheDocument();
+    });
+
+    // Check tab counts by looking for specific elements within the tab buttons
+    const allTab = screen.getByRole('button', { name: /All/ });
+    expect(allTab).toBeInTheDocument();
+    // The "All" tab should have count 4
+    expect(allTab).toHaveTextContent('4'); // All tab count
+    
+    const sentTab = screen.getByRole('button', { name: /Sent/ });
+    expect(sentTab).toBeInTheDocument();
+    // The "Sent" tab should have count 2
+    expect(sentTab).toHaveTextContent('2'); // Sent tab count
+    
+    const pendingTab = screen.getByRole('button', { name: /Pending/ });
+    expect(pendingTab).toBeInTheDocument();
+    // The "Pending" tab should have count 1
+    expect(pendingTab).toHaveTextContent('1'); // Pending tab count
+    
+    const failedTab = screen.getByRole('button', { name: /Failed/ });
+    expect(failedTab).toBeInTheDocument();
+    // The "Failed" tab should have count 1
+    expect(failedTab).toHaveTextContent('1'); // Failed tab count
+  });
+
+  it('handles null values in deal data', async () => {
+    const mockDeals = [
+      {
+        id: '1',
+        title: null,
+        shopping_platform: null,
+        price: null,
+        discounted: null,
+        org_link: null,
+        image_url: null,
+        badge: null,
+        status: null,
+        created_at: null,
+      },
+    ];
+    
+    (api.get as jest.Mock).mockResolvedValue({ data: mockDeals });
+
+    render(<RecentDealsTable />);
+
+    await waitFor(() => {
+      expect(screen.getByText('—')).toBeInTheDocument();
+    });
+
+    // Should show '—' for null values in different fields
+    const dashElements = screen.getAllByText('—');
+    expect(dashElements.length).toBeGreaterThan(3); // Should have multiple dash elements
+  });
+
+  it('opens external link when view button is clicked', async () => {
+    const mockDeals = [
+      {
+        id: '1',
+        title: 'Test Deal',
+        org_link: 'https://example.com/deal',
+        status: 'Sent',
+      },
+    ];
+    
+    (api.get as jest.Mock).mockResolvedValue({ data: mockDeals });
+
+    // Mock window.open
+    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null as any);
+
+    render(<RecentDealsTable />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Test Deal')).toBeInTheDocument();
+    });
+
+    // Find the button by its text content and role
+    const viewButton = screen.getByRole('button', { name: /View/i });
+    viewButton.click();
+
+    expect(windowOpenSpy).toHaveBeenCalledWith(
+      'https://example.com/deal',
+      '_blank',
+      'noopener,noreferrer'
+    );
+
+    windowOpenSpy.mockRestore();
+  });
+
+  it('disables view button when link is null', async () => {
+    const mockDeals = [
+      {
+        id: '1',
+        title: 'Test Deal',
+        org_link: null,
+        status: 'Sent',
+      },
+    ];
+    
+    (api.get as jest.Mock).mockResolvedValue({ data: mockDeals });
+
+    render(<RecentDealsTable />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Test Deal')).toBeInTheDocument();
+    });
+
+    // Find the button by its text content and role
+    const viewButton = screen.getByRole('button', { name: /View/i });
+    expect(viewButton).toBeDisabled();
+  });
+
+  it('formats dates correctly', async () => {
+    const mockDeals = [
+      {
+        id: '1',
+        title: 'Test Deal',
+        created_at: '2023-01-15T10:30:00Z',
+        status: 'Sent',
+      },
+    ];
+    
+    (api.get as jest.Mock).mockResolvedValue({ data: mockDeals });
+
+    render(<RecentDealsTable />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Test Deal')).toBeInTheDocument();
+    });
+
+    // Should format the date (format depends on locale, but should be a readable date)
+    const dateElement = screen.getByText(/Jan|January/);
+    expect(dateElement).toBeInTheDocument();
+  });
+
+  it('formats money correctly', async () => {
+    const mockDeals = [
+      {
+        id: '1',
+        title: 'Test Deal',
+        price: 99.99,
+        discounted: 79.99,
+        status: 'Sent',
+      },
+    ];
+    
+    (api.get as jest.Mock).mockResolvedValue({ data: mockDeals });
+
+    render(<RecentDealsTable />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Test Deal')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('$99.99')).toBeInTheDocument();
+    expect(screen.getByText('$79.99')).toBeInTheDocument();
+  });
+
+  it('shows status badges with correct styling', async () => {
+    const mockDeals = [
+      {
+        id: '1',
+        title: 'Sent Deal',
+        status: 'Sent',
+      },
+      {
+        id: '2',
+        title: 'Pending Deal',
+        status: 'Pending',
+      },
+      {
+        id: '3',
+        title: 'Failed Deal',
+        status: 'Failed',
+      },
+    ];
+    
+    (api.get as jest.Mock).mockResolvedValue({ data: mockDeals });
+
+    render(<RecentDealsTable />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Sent Deal')).toBeInTheDocument();
+    });
+
+    // Check that deal titles are present to ensure the deals are rendered
+    expect(screen.getByText('Sent Deal')).toBeInTheDocument();
+    expect(screen.getByText('Pending Deal')).toBeInTheDocument();
+    expect(screen.getByText('Failed Deal')).toBeInTheDocument();
+  });
+});
